@@ -130,9 +130,11 @@ class AttemptApiTest {
 
         String body = result.getResponse().getContentAsString();
         assertThat(body).doesNotContain("isCorrect");
+        assertThat(body).doesNotContain("\"correct\"");
         assertThat(body).doesNotContain("correctAnswer");
         assertThat(body).doesNotContain("explanation");
         assertThat(body).doesNotContain("selectedOption");
+        assertThat(body).doesNotContain("score");
     }
 
     @Test
@@ -194,14 +196,20 @@ class AttemptApiTest {
     void submitValidationRejectsDuplicateQuestionAndOptionFromWrongQuestion() throws Exception {
         User user = createUser();
         Quiz quiz = createQuiz(true);
+        Quiz otherQuiz = createQuiz(true);
         Question firstQuestion = createQuestionWithOptions(quiz, 1);
         Question secondQuestion = createQuestionWithOptions(quiz, 2);
+        Question outsideQuestion = createQuestionWithOptions(otherQuiz, 1);
         Option firstQuestionOption = createdOptions.stream()
                 .filter(option -> option.getQuestion().getId().equals(firstQuestion.getId()))
                 .findFirst()
                 .orElseThrow();
         Option secondQuestionOption = createdOptions.stream()
                 .filter(option -> option.getQuestion().getId().equals(secondQuestion.getId()))
+                .findFirst()
+                .orElseThrow();
+        Option outsideOption = createdOptions.stream()
+                .filter(option -> option.getQuestion().getId().equals(outsideQuestion.getId()))
                 .findFirst()
                 .orElseThrow();
 
@@ -229,6 +237,18 @@ class AttemptApiTest {
                         .content(objectMapper.writeValueAsString(wrongOptionRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Option does not belong to question"));
+
+        Long thirdAttemptId = startAttempt(user, quiz.getId());
+        SubmitAttemptRequest outsideQuestionRequest = new SubmitAttemptRequest(List.of(
+                new SubmitAnswerRequest(outsideQuestion.getId(), outsideOption.getId())
+        ));
+
+        mockMvc.perform(post("/api/attempts/{id}/submit", thirdAttemptId)
+                        .header("Authorization", bearer(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(outsideQuestionRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Question does not belong to this quiz"));
     }
 
     @Test
@@ -290,8 +310,9 @@ class AttemptApiTest {
         mockMvc.perform(get("/api/attempts/me")
                         .header("Authorization", bearer(user)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].attemptId").isArray())
-                .andExpect(jsonPath("$[0].quizId").value(quiz.getId().intValue()));
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].attemptId").value(submittedAttemptId.intValue()))
+                .andExpect(jsonPath("$[1].attemptId").value(unsubmittedAttemptId.intValue()));
     }
 
     private Long startAttempt(User user, Long quizId) throws Exception {

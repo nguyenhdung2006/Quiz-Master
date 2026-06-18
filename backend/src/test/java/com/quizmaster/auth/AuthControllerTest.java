@@ -12,7 +12,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -43,20 +46,68 @@ class AuthControllerTest {
     }
 
     @Test
+    void registerLoginAndMeWorkWithValidCredentials() throws Exception {
+        testEmail = uniqueEmail();
+
+        MvcResult registerResult = register(testEmail, "password123")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.user.email").value(testEmail))
+                .andExpect(jsonPath("$.user.role").value("USER"))
+                .andReturn();
+
+        String registerToken = extractToken(registerResult);
+
+        mockMvc.perform(get("/api/auth/me")
+                        .header("Authorization", "Bearer " + registerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(testEmail))
+                .andExpect(jsonPath("$.role").value("USER"));
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest(testEmail, "password123"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.user.email").value(testEmail))
+                .andReturn();
+
+        assertThat(extractToken(loginResult)).isNotBlank();
+    }
+
+    @Test
+    void meRequiresAuthenticationAndUserCannotAccessAdminApi() throws Exception {
+        testEmail = uniqueEmail();
+        MvcResult registerResult = register(testEmail, "password123")
+                .andExpect(status().isOk())
+                .andReturn();
+
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/admin/quizzes")
+                        .header("Authorization", "Bearer " + extractToken(registerResult)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void loginWithWrongPasswordReturnsUnauthorized() throws Exception {
         testEmail = uniqueEmail();
         register(testEmail, "password123").andExpect(status().isOk());
 
         LoginRequest loginRequest = new LoginRequest(testEmail, "wrongpassword");
 
-        mockMvc.perform(post("/api/auth/login")
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.error").value("Unauthorized"))
                 .andExpect(jsonPath("$.message").value("Invalid email or password"))
-                .andExpect(jsonPath("$.path").value("/api/auth/login"));
+                .andExpect(jsonPath("$.path").value("/api/auth/login"))
+                .andReturn();
+
+        assertNoInternalDetails(result);
     }
 
     @Test
@@ -94,14 +145,17 @@ class AuthControllerTest {
 
     @Test
     void malformedJsonReturnsBadRequest() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"broken@example.com\",\"password\":"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Malformed JSON request"))
-                .andExpect(jsonPath("$.path").value("/api/auth/login"));
+                .andExpect(jsonPath("$.path").value("/api/auth/login"))
+                .andReturn();
+
+        assertNoInternalDetails(result);
     }
 
     @Test
@@ -126,6 +180,19 @@ class AuthControllerTest {
         return mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)));
+    }
+
+    private String extractToken(MvcResult result) throws Exception {
+        return objectMapper.readTree(result.getResponse().getContentAsString())
+                .get("accessToken")
+                .asText();
+    }
+
+    private void assertNoInternalDetails(MvcResult result) throws Exception {
+        String body = result.getResponse().getContentAsString();
+        assertThat(body).doesNotContain("Exception");
+        assertThat(body).doesNotContain("stackTrace");
+        assertThat(body).doesNotContain("org.springframework");
     }
 
     private String uniqueEmail() {

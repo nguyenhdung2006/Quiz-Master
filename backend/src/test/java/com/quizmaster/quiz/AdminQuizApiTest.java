@@ -327,6 +327,26 @@ class AdminQuizApiTest {
     }
 
     @Test
+    void publishedQuizRejectsStructuralQuestionChanges() throws Exception {
+        User admin = createUser(UserRole.ADMIN);
+        Category category = createCategory("Published", uniqueSlug("published"));
+        Quiz quiz = createQuiz(category, true);
+        Question question = createQuestionWithOptions(quiz, 1);
+
+        mockMvc.perform(put("/api/admin/questions/{questionId}", question.getId())
+                        .header("Authorization", bearer(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(validQuestionRequest(1))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Unpublish quiz before editing questions"));
+
+        mockMvc.perform(delete("/api/admin/questions/{questionId}", question.getId())
+                        .header("Authorization", bearer(admin)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Unpublish quiz before editing questions"));
+    }
+
+    @Test
     void publishRejectsInvalidQuizzes() throws Exception {
         User admin = createUser(UserRole.ADMIN);
         Category category = createCategory("Publish", uniqueSlug("publish"));
@@ -361,6 +381,44 @@ class AdminQuizApiTest {
         mockMvc.perform(patch("/api/admin/quizzes/{id}/publish", twoCorrectQuiz.getId())
                         .header("Authorization", bearer(admin)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void publishRejectsInvalidDisplayOrdersAndBlankContent() throws Exception {
+        User admin = createUser(UserRole.ADMIN);
+        Category category = createCategory("Publish Rules", uniqueSlug("publish-rules"));
+        Quiz invalidQuestionOrderQuiz = createQuiz(category, false);
+        Quiz duplicateOptionOrderQuiz = createQuiz(category, false);
+        Quiz blankContentQuiz = createQuiz(category, false);
+
+        Question invalidOrderQuestion = createQuestion(invalidQuestionOrderQuiz, 0);
+        createOption(invalidOrderQuestion, "A", true, 1);
+        createOption(invalidOrderQuestion, "B", false, 2);
+
+        Question duplicateOptionOrderQuestion = createQuestion(duplicateOptionOrderQuiz, 1);
+        createOption(duplicateOptionOrderQuestion, "A", true, 1);
+        createOption(duplicateOptionOrderQuestion, "B", false, 1);
+
+        Question blankQuestion = createQuestion(blankContentQuiz, 1);
+        blankQuestion.setContent(" ");
+        questionRepository.save(blankQuestion);
+        createOption(blankQuestion, "A", true, 1);
+        createOption(blankQuestion, "B", false, 2);
+
+        mockMvc.perform(patch("/api/admin/quizzes/{id}/publish", invalidQuestionOrderQuiz.getId())
+                        .header("Authorization", bearer(admin)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Question display order must be positive"));
+
+        mockMvc.perform(patch("/api/admin/quizzes/{id}/publish", duplicateOptionOrderQuiz.getId())
+                        .header("Authorization", bearer(admin)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Option display order must be unique within a question"));
+
+        mockMvc.perform(patch("/api/admin/quizzes/{id}/publish", blankContentQuiz.getId())
+                        .header("Authorization", bearer(admin)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Question content is required"));
     }
 
     @Test

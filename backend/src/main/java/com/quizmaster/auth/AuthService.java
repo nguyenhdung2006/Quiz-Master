@@ -8,12 +8,15 @@ import com.quizmaster.user.UserRole;
 import jakarta.transaction.Transactional;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private static final String INVALID_LOGIN_MESSAGE = "Invalid email or password";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -32,7 +35,13 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole(UserRole.USER);
 
-        User savedUser = userRepository.save(user);
+        User savedUser;
+        try {
+            savedUser = userRepository.save(user);
+        } catch (DataIntegrityViolationException exception) {
+            throw new BadRequestException("Email already exists");
+        }
+
         String token = jwtService.generateToken(savedUser);
 
         return new AuthResponse(token, UserSummaryResponse.from(savedUser));
@@ -42,10 +51,10 @@ public class AuthService {
         String email = normalizeEmail(request.email());
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
+                .orElseThrow(() -> new UnauthorizedException(INVALID_LOGIN_MESSAGE));
 
-        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new UnauthorizedException("Invalid email or password");
+        if (!passwordMatches(request.password(), user.getPassword())) {
+            throw new UnauthorizedException(INVALID_LOGIN_MESSAGE);
         }
 
         String token = jwtService.generateToken(user);
@@ -61,5 +70,13 @@ public class AuthService {
 
     private String normalizeEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private boolean passwordMatches(String rawPassword, String encodedPassword) {
+        try {
+            return passwordEncoder.matches(rawPassword, encodedPassword);
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
     }
 }

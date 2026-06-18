@@ -8,4 +8,6 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findByQuizIdOrderByDisplayOrderAsc(Long quizId);
 
     long countByQuizId(Long quizId);
+
+    boolean existsByQuizIdAndDisplayOrder(Long quizId, Integer displayOrder);
 }

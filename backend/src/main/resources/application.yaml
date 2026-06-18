@@ -1,3 +1,16 @@
 spring:
   application:
     name: quizmaster
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/quizmaster}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true

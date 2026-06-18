@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface OptionRepository extends JpaRepository<Option, Long> {
 
     List<Option> findByQuestionIdOrderByDisplayOrderAsc(Long questionId);
+
+    List<Option> findByQuestionIdInOrderByQuestionIdAscDisplayOrderAsc(List<Long> questionIds);
 }

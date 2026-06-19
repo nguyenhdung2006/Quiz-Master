@@ -20,9 +20,6 @@ export default function AdminLayout() {
             <NavLink to="/admin/quizzes" className={linkClass}>
               Quizzes
             </NavLink>
-            <NavLink to="/admin/quizzes/new" className={linkClass}>
-              New Quiz
-            </NavLink>
             <NavLink to="/admin/categories" className={linkClass}>
               Categories
             </NavLink>

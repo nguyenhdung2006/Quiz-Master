@@ -13,3 +13,7 @@ export function submitAttempt(attemptId, answers) {
 export function getAttemptResult(attemptId) {
   return apiClient.get(`/api/attempts/${encodeURIComponent(attemptId)}/result`);
 }
+
+export function getMyAttempts() {
+  return apiClient.get("/api/attempts/me");
+}

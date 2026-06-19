@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import AdminRoute from "./auth/AdminRoute.jsx";
 import ProtectedRoute from "./auth/ProtectedRoute.jsx";
 import AdminLayout from "./layouts/AdminLayout.jsx";
@@ -30,7 +30,8 @@ export default function App() {
           <Route path="/attempts/:attemptId/take" element={<TakeQuizPage />} />
           <Route path="/attempts/:attemptId/result" element={<ResultPage />} />
           <Route path="/attempts/:attemptId/review" element={<AnswerReviewPage />} />
-          <Route path="/me/attempts" element={<MyAttemptsPage />} />
+          <Route path="/attempts" element={<MyAttemptsPage />} />
+          <Route path="/me/attempts" element={<Navigate to="/attempts" replace />} />
         </Route>
       </Route>
 

@@ -24,7 +24,7 @@ export default function PublicLayout() {
               Quizzes
             </NavLink>
             {isAuthenticated && (
-              <NavLink to="/me/attempts" className={linkClass}>
+              <NavLink to="/attempts" className={linkClass}>
                 My Attempts
               </NavLink>
             )}

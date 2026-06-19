@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext.jsx";
 
 const linkClass = ({ isActive }) =>
   `rounded px-3 py-2 text-sm font-medium ${
@@ -6,6 +7,8 @@ const linkClass = ({ isActive }) =>
   }`;
 
 export default function AdminLayout() {
+  const { currentUser, logout } = useAuth();
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
@@ -13,7 +16,7 @@ export default function AdminLayout() {
           <NavLink to="/" className="text-lg font-semibold text-slate-950">
             QuizMaster Admin
           </NavLink>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center justify-end gap-1">
             <NavLink to="/admin/quizzes" className={linkClass}>
               Quizzes
             </NavLink>
@@ -26,6 +29,16 @@ export default function AdminLayout() {
             <NavLink to="/quizzes" className={linkClass}>
               Public Site
             </NavLink>
+            <span className="hidden rounded px-2 py-1 text-xs font-medium text-slate-500 sm:inline">
+              {currentUser?.email} · {currentUser?.role}
+            </span>
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Logout
+            </button>
           </div>
         </nav>
       </header>

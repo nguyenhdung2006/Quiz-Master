@@ -39,23 +39,35 @@ export function AuthProvider({ children }) {
   }, [refreshCurrentUser]);
 
   const applyAuthResponse = useCallback(async (authResponse) => {
+    if (!authResponse?.accessToken) {
+      clearAuth();
+      return authResponse;
+    }
+
     setAccessToken(authResponse.accessToken);
     setTokenState(authResponse.accessToken);
-    setCurrentUser(authResponse.user || null);
+
+    try {
+      const user = await apiClient.get("/api/auth/me");
+      setCurrentUser(user);
+    } catch {
+      setCurrentUser(authResponse.user || null);
+    }
+
     return authResponse;
-  }, []);
+  }, [clearAuth]);
 
   const login = useCallback(
-    async (credentials) => {
-      const response = await apiClient.post("/api/auth/login", credentials);
+    async (email, password) => {
+      const response = await apiClient.post("/api/auth/login", { email, password });
       return applyAuthResponse(response);
     },
     [applyAuthResponse],
   );
 
   const register = useCallback(
-    async (payload) => {
-      const response = await apiClient.post("/api/auth/register", payload);
+    async (registerData) => {
+      const response = await apiClient.post("/api/auth/register", registerData);
       return applyAuthResponse(response);
     },
     [applyAuthResponse],

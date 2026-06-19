@@ -16,7 +16,7 @@ export default function PublicLayout() {
           <NavLink to="/" className="text-lg font-semibold text-slate-950">
             QuizMaster
           </NavLink>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center justify-end gap-1">
             <NavLink to="/quizzes" className={linkClass}>
               Quizzes
             </NavLink>
@@ -40,13 +40,18 @@ export default function PublicLayout() {
                 </NavLink>
               </>
             ) : (
-              <button
-                type="button"
-                onClick={logout}
-                className="rounded px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-              >
-                Logout
-              </button>
+              <>
+                <span className="hidden rounded px-2 py-1 text-xs font-medium text-slate-500 sm:inline">
+                  {currentUser.email} · {currentUser.role}
+                </span>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="rounded px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  Logout
+                </button>
+              </>
             )}
           </div>
         </nav>

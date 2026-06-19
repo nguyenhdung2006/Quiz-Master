@@ -17,6 +17,9 @@ export default function PublicLayout() {
             QuizMaster
           </NavLink>
           <div className="flex flex-wrap items-center justify-end gap-1">
+            <NavLink to="/" className={linkClass}>
+              Home
+            </NavLink>
             <NavLink to="/quizzes" className={linkClass}>
               Quizzes
             </NavLink>
@@ -42,7 +45,7 @@ export default function PublicLayout() {
             ) : (
               <>
                 <span className="hidden rounded px-2 py-1 text-xs font-medium text-slate-500 sm:inline">
-                  {currentUser.email} · {currentUser.role}
+                  {currentUser.email} - {currentUser.role}
                 </span>
                 <button
                   type="button"

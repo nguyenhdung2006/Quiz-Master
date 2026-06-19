@@ -30,7 +30,7 @@ export default function AdminLayout() {
               Public Site
             </NavLink>
             <span className="hidden rounded px-2 py-1 text-xs font-medium text-slate-500 sm:inline">
-              {currentUser?.email} · {currentUser?.role}
+              {currentUser?.email} - {currentUser?.role}
             </span>
             <button
               type="button"

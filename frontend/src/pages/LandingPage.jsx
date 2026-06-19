@@ -55,7 +55,7 @@ export default function LandingPage() {
         />
         <InfoCard
           title="Review progress later"
-          text="Signed-in users will be able to return to previous attempts and review completed work."
+          text="Signed-in users can return to previous attempts and review completed work."
         />
       </section>
     </div>

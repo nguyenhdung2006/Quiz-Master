@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { startAttempt } from "../api/attemptApi.js";
 import { getQuizDetail } from "../api/publicQuizApi.js";
 import { useAuth } from "../auth/AuthContext.jsx";
 import ErrorState from "../components/common/ErrorState.jsx";
@@ -14,7 +15,8 @@ export default function QuizDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notFound, setNotFound] = useState(false);
-  const [startMessage, setStartMessage] = useState("");
+  const [startError, setStartError] = useState("");
+  const [starting, setStarting] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -54,8 +56,8 @@ export default function QuizDetailPage() {
     };
   }, [id]);
 
-  function handleStartQuiz() {
-    if (authLoading) {
+  async function handleStartQuiz() {
+    if (authLoading || starting) {
       return;
     }
 
@@ -64,7 +66,17 @@ export default function QuizDetailPage() {
       return;
     }
 
-    setStartMessage("Taking a quiz will be available in Phase 9.4.");
+    setStarting(true);
+    setStartError("");
+
+    try {
+      const attempt = await startAttempt(quiz.id);
+      navigate(`/attempts/${attempt.attemptId}/take`, { state: { attempt } });
+    } catch (requestError) {
+      setStartError(requestError.message || "Unable to start this quiz.");
+    } finally {
+      setStarting(false);
+    }
   }
 
   if (loading) {
@@ -107,12 +119,12 @@ export default function QuizDetailPage() {
           <button
             type="button"
             onClick={handleStartQuiz}
-            disabled={authLoading}
+            disabled={authLoading || starting}
             className="mt-4 w-full rounded-md bg-purple-700 px-4 py-3 text-sm font-semibold text-white hover:bg-purple-800 disabled:cursor-not-allowed disabled:bg-purple-300"
           >
-            {authLoading ? "Checking session..." : "Start quiz"}
+            {starting ? "Starting..." : authLoading ? "Checking session..." : "Start quiz"}
           </button>
-          {startMessage && <p className="mt-3 text-sm text-purple-700">{startMessage}</p>}
+          {startError && <p className="mt-3 text-sm text-red-700">{startError}</p>}
         </div>
       </div>
     </article>

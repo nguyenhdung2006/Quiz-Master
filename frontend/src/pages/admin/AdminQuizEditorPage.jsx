@@ -3,9 +3,17 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { getCategories } from "../../api/adminCategoryApi.js";
 import {
   createAdminQuiz,
+  createAdminQuestion,
+  deleteAdminQuestion,
   getAdminQuiz,
+  publishAdminQuiz,
+  unpublishAdminQuiz,
+  updateAdminQuestion,
   updateAdminQuiz,
 } from "../../api/adminQuizApi.js";
+import PublishStatusCard from "../../components/admin/PublishStatusCard.jsx";
+import QuestionEditor from "../../components/admin/QuestionEditor.jsx";
+import QuestionList from "../../components/admin/QuestionList.jsx";
 import QuizMetadataForm from "../../components/admin/QuizMetadataForm.jsx";
 import EmptyState from "../../components/common/EmptyState.jsx";
 import ErrorState from "../../components/common/ErrorState.jsx";
@@ -24,12 +32,23 @@ export default function AdminQuizEditorPage() {
   const [loadError, setLoadError] = useState(null);
   const [saveError, setSaveError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [questionError, setQuestionError] = useState(null);
+  const [questionSaving, setQuestionSaving] = useState(false);
+  const [confirmingDeleteQuestionId, setConfirmingDeleteQuestionId] = useState(null);
+  const [deletingQuestionId, setDeletingQuestionId] = useState(null);
+  const [publishError, setPublishError] = useState(null);
+  const [publishMessage, setPublishMessage] = useState(null);
+  const [publishing, setPublishing] = useState(false);
 
   const loadPage = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
     setSaveError(null);
     setSuccessMessage(null);
+    setQuestionError(null);
+    setPublishError(null);
+    setPublishMessage(null);
 
     try {
       const [categoryData, quizData] = await Promise.all([
@@ -71,6 +90,68 @@ export default function AdminQuizEditorPage() {
     }
   }
 
+  async function handleQuestionSubmit(payload) {
+    setQuestionSaving(true);
+    setQuestionError(null);
+    setPublishMessage(null);
+
+    try {
+      if (editingQuestion) {
+        await updateAdminQuestion(editingQuestion.id, payload);
+      } else {
+        await createAdminQuestion(routeQuizId, payload);
+      }
+
+      setEditingQuestion(null);
+      await loadPage();
+    } catch (error) {
+      setQuestionError(error.message || "Could not save question.");
+    } finally {
+      setQuestionSaving(false);
+    }
+  }
+
+  async function handleDeleteQuestion(question) {
+    setDeletingQuestionId(question.id);
+    setQuestionError(null);
+
+    try {
+      await deleteAdminQuestion(question.id);
+      setConfirmingDeleteQuestionId(null);
+      if (editingQuestion?.id === question.id) {
+        setEditingQuestion(null);
+      }
+      await loadPage();
+    } catch (error) {
+      setQuestionError(error.message || "Could not delete question.");
+    } finally {
+      setDeletingQuestionId(null);
+    }
+  }
+
+  async function handleTogglePublish() {
+    setPublishing(true);
+    setPublishError(null);
+    setPublishMessage(null);
+    setQuestionError(null);
+
+    try {
+      if (quiz?.published) {
+        await unpublishAdminQuiz(routeQuizId);
+        await loadPage();
+        setPublishMessage("Quiz unpublished.");
+      } else {
+        await publishAdminQuiz(routeQuizId);
+        await loadPage();
+        setPublishMessage("Quiz published.");
+      }
+    } catch (error) {
+      setPublishError(error.message || "Could not update publish status.");
+    } finally {
+      setPublishing(false);
+    }
+  }
+
   if (loading) {
     return <LoadingState message={editing ? "Loading quiz..." : "Loading categories..."} />;
   }
@@ -97,7 +178,7 @@ export default function AdminQuizEditorPage() {
             </h1>
             <p className="mt-2 text-sm text-slate-500">
               {editing
-                ? "Update quiz metadata without changing questions or publish state."
+                ? "Manage quiz metadata, questions, and publish status."
                 : "Create a draft quiz by setting its basic metadata."}
             </p>
           </div>
@@ -125,48 +206,58 @@ export default function AdminQuizEditorPage() {
         />
 
         <aside className="space-y-4">
-          <QuizStatusCard quiz={quiz} editing={editing} />
-          <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
-            <h2 className="text-lg font-semibold text-slate-950">Questions</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Question editor coming in the next phase.
-            </p>
-          </section>
+          <PublishStatusCard
+            editing={editing}
+            error={publishError}
+            message={publishMessage}
+            onTogglePublish={handleTogglePublish}
+            publishing={publishing}
+            quiz={quiz}
+          />
         </aside>
       </div>
+
+      {editing && (
+        <section className="space-y-5">
+          <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <h2 className="text-2xl font-semibold text-slate-950">Questions</h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Add single-choice questions with exactly one correct option.
+            </p>
+          </div>
+
+          <QuestionEditor
+            defaultDisplayOrder={(quiz?.questions || []).length + 1}
+            disabled={Boolean(quiz?.published)}
+            editingQuestion={editingQuestion}
+            error={questionError}
+            saving={questionSaving}
+            onCancelEdit={() => {
+              setEditingQuestion(null);
+              setQuestionError(null);
+            }}
+            onSubmit={handleQuestionSubmit}
+          />
+
+          <QuestionList
+            confirmingDeleteId={confirmingDeleteQuestionId}
+            deletingId={deletingQuestionId}
+            disabled={Boolean(quiz?.published)}
+            onCancelDelete={() => setConfirmingDeleteQuestionId(null)}
+            onConfirmDelete={handleDeleteQuestion}
+            onEdit={(question) => {
+              setEditingQuestion(question);
+              setConfirmingDeleteQuestionId(null);
+              setQuestionError(null);
+            }}
+            onRequestDelete={(question) => {
+              setConfirmingDeleteQuestionId(question.id);
+              setQuestionError(null);
+            }}
+            questions={quiz?.questions || []}
+          />
+        </section>
+      )}
     </div>
-  );
-}
-
-function QuizStatusCard({ quiz, editing }) {
-  const published = Boolean(quiz?.published);
-
-  return (
-    <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
-      <h2 className="text-lg font-semibold text-slate-950">Status</h2>
-      <div className="mt-4 space-y-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Publication</p>
-          <span
-            className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-              published ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-            }`}
-          >
-            {published ? "Published" : "Draft"}
-          </span>
-        </div>
-
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Question count</p>
-          <p className="mt-1 text-sm font-medium text-slate-900">
-            {editing ? quiz?.questionCount ?? 0 : 0}
-          </p>
-        </div>
-
-        <p className="text-sm leading-6 text-slate-500">
-          This form only changes quiz metadata.
-        </p>
-      </div>
-    </section>
   );
 }

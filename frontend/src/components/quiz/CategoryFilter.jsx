@@ -1,15 +1,21 @@
+import { classNames } from "../ui/classNames.js";
+
 export default function CategoryFilter({ categories, selectedCategoryId, disabled, onChange }) {
+  const buttonClass = (active) =>
+    classNames(
+      "rounded-full px-3.5 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60",
+      active
+        ? "bg-purple-700 text-white shadow-sm"
+        : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-purple-50 hover:text-purple-800 hover:ring-purple-200",
+    );
+
   return (
     <div className="flex flex-wrap gap-2">
       <button
         type="button"
         disabled={disabled}
         onClick={() => onChange("")}
-        className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-          selectedCategoryId === ""
-            ? "bg-purple-700 text-white"
-            : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-        } disabled:cursor-not-allowed disabled:opacity-60`}
+        className={buttonClass(selectedCategoryId === "")}
       >
         All
       </button>
@@ -19,11 +25,7 @@ export default function CategoryFilter({ categories, selectedCategoryId, disable
           key={category.id}
           disabled={disabled}
           onClick={() => onChange(String(category.id))}
-          className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-            selectedCategoryId === String(category.id)
-              ? "bg-purple-700 text-white"
-              : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-          } disabled:cursor-not-allowed disabled:opacity-60`}
+          className={buttonClass(selectedCategoryId === String(category.id))}
         >
           {category.name}
         </button>

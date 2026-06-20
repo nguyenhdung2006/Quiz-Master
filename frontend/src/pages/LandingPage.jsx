@@ -1,46 +1,48 @@
 import { Link } from "react-router-dom";
+import Badge from "../components/ui/Badge.jsx";
+import Button from "../components/ui/Button.jsx";
+import Card from "../components/ui/Card.jsx";
 
 export default function LandingPage() {
   return (
-    <div className="space-y-12">
-      <section className="grid gap-8 rounded-lg bg-white p-8 shadow-sm ring-1 ring-slate-200 md:grid-cols-[1.3fr_0.7fr] md:p-10">
+    <div className="space-y-10">
+      <section className="grid gap-8 overflow-hidden rounded-3xl border border-purple-100 bg-white p-6 shadow-sm md:grid-cols-[1.25fr_0.75fr] md:p-10">
         <div className="flex flex-col justify-center">
-          <p className="text-sm font-semibold uppercase tracking-wide text-purple-700">QuizMaster</p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-semibold text-slate-950 md:text-5xl">
-            Practice focused quizzes for real learning momentum.
+          <Badge variant="purple">QuizMaster learning platform</Badge>
+          <h1 className="mt-5 max-w-3xl text-4xl font-bold tracking-tight text-slate-950 md:text-5xl">
+            Practice focused quizzes and review every answer with clarity.
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600">
             Build confidence across Java, Spring Boot, SQL, Networking, Software Engineering, English,
-            and other subjects as the catalog grows.
+            and other subjects through a clean quiz flow built for steady self-study.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link
-              to="/quizzes"
-              className="rounded-md bg-purple-700 px-5 py-3 text-sm font-semibold text-white hover:bg-purple-800"
-            >
+            <Button as={Link} to="/quizzes" size="lg">
               Browse quizzes
-            </Link>
-            <Link
-              to="/register"
-              className="rounded-md bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-200"
-            >
+            </Button>
+            <Button as={Link} to="/register" size="lg" variant="secondary">
               Create account
-            </Link>
+            </Button>
+          </div>
+          <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
+            <Capability label="Take quiz" />
+            <Capability label="Instant result" />
+            <Capability label="Review answers" />
           </div>
         </div>
-        <div className="rounded-lg bg-purple-50 p-6">
-          <div className="rounded-lg bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">Quiz preview</p>
+        <div className="rounded-2xl bg-gradient-to-br from-purple-100 via-white to-slate-100 p-4">
+          <Card className="shadow-md" padding="lg">
+            <p className="text-sm font-semibold text-purple-700">Quiz preview</p>
             <h2 className="mt-3 text-xl font-semibold text-slate-950">Spring Boot Basics</h2>
             <div className="mt-5 space-y-3">
               <div className="h-3 rounded bg-purple-100" />
               <div className="h-3 w-10/12 rounded bg-slate-100" />
               <div className="h-3 w-8/12 rounded bg-slate-100" />
             </div>
-            <div className="mt-6 rounded-md bg-purple-700 px-4 py-3 text-center text-sm font-semibold text-white">
+            <div className="mt-6 rounded-xl bg-purple-700 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm">
               Ready when you are
             </div>
-          </div>
+          </Card>
         </div>
       </section>
 
@@ -64,9 +66,17 @@ export default function LandingPage() {
 
 function InfoCard({ title, text }) {
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+    <Card as="article" className="transition hover:-translate-y-0.5 hover:shadow-md" padding="lg">
       <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
       <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
-    </article>
+    </Card>
+  );
+}
+
+function Capability({ label }) {
+  return (
+    <div className="rounded-xl border border-purple-100 bg-purple-50 px-3 py-2 text-center text-sm font-semibold text-purple-800">
+      {label}
+    </div>
   );
 }

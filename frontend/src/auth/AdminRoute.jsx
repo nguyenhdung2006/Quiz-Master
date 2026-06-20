@@ -1,12 +1,25 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import ErrorState from "../components/common/ErrorState.jsx";
+import LoadingState from "../components/common/LoadingState.jsx";
 import { useAuth } from "./AuthContext.jsx";
 
 export default function AdminRoute() {
-  const { currentUser, isAuthenticated, loading } = useAuth();
+  const { authError, currentUser, isAuthenticated, loading, refreshCurrentUser } = useAuth();
   const location = useLocation();
 
   if (loading) {
-    return <div className="px-6 py-10 text-sm text-slate-500">Loading...</div>;
+    return <LoadingState message="Đang kiểm tra quyền quản trị..." />;
+  }
+
+  if (authError) {
+    return (
+      <ErrorState
+        title="Không thể kiểm tra quyền truy cập"
+        message={authError.message}
+        actionLabel="Thử lại"
+        onAction={refreshCurrentUser}
+      />
+    );
   }
 
   if (!isAuthenticated) {

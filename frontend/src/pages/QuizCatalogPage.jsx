@@ -77,8 +77,8 @@ export default function QuizCatalogPage() {
             <LoadingState message="Loading selected category..." />
           ) : quizzes.length === 0 ? (
             <EmptyState
-              title="No published quizzes yet"
-              message="Try another category or check back after an admin publishes quizzes."
+              title="Chưa có quiz công khai."
+              message="Thử chọn chủ đề khác hoặc quay lại sau khi admin xuất bản thêm quiz."
             />
           ) : (
             <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

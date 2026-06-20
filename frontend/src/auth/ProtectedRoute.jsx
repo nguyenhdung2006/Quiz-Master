@@ -1,12 +1,25 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import ErrorState from "../components/common/ErrorState.jsx";
+import LoadingState from "../components/common/LoadingState.jsx";
 import { useAuth } from "./AuthContext.jsx";
 
 export default function ProtectedRoute() {
-  const { isAuthenticated, loading } = useAuth();
+  const { authError, isAuthenticated, loading, refreshCurrentUser } = useAuth();
   const location = useLocation();
 
   if (loading) {
-    return <div className="px-6 py-10 text-sm text-slate-500">Loading...</div>;
+    return <LoadingState message="Đang kiểm tra phiên đăng nhập..." />;
+  }
+
+  if (authError) {
+    return (
+      <ErrorState
+        title="Không thể kiểm tra phiên đăng nhập"
+        message={authError.message}
+        actionLabel="Thử lại"
+        onAction={refreshCurrentUser}
+      />
+    );
   }
 
   if (!isAuthenticated) {

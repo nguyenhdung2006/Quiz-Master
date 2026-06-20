@@ -90,7 +90,10 @@ export default function MyAttemptsPage() {
 function EmptyAttemptsState() {
   return (
     <div className="space-y-4">
-      <EmptyState title="No attempts yet." message="Start a quiz to see your history here." />
+      <EmptyState
+        title="Bạn chưa có lịch sử làm bài."
+        message="Bắt đầu một quiz để xem kết quả và phần review tại đây."
+      />
       <Button as={Link} to="/quizzes">
         Browse quizzes
       </Button>

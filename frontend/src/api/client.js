@@ -1,5 +1,15 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 const TOKEN_STORAGE_KEY = "quizmaster.accessToken";
+const REQUEST_TIMEOUT_MS = 8000;
+const NETWORK_ERROR_MESSAGE =
+  "Không kết nối được máy chủ. Kiểm tra backend hoặc thử lại sau.";
+
+const STATUS_MESSAGES = {
+  401: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+  403: "Bạn không có quyền thực hiện thao tác này.",
+  404: "Không tìm thấy dữ liệu được yêu cầu.",
+  500: "Máy chủ đang gặp lỗi. Vui lòng thử lại sau.",
+};
 
 export function getAccessToken() {
   return localStorage.getItem(TOKEN_STORAGE_KEY);
@@ -26,10 +36,28 @@ export async function apiRequest(path, options = {}) {
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  const controller = options.signal ? null : new AbortController();
+  const timeoutId = controller
+    ? window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+    : null;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      signal: options.signal || controller?.signal,
+    });
+  } catch (requestError) {
+    const error = new Error(NETWORK_ERROR_MESSAGE);
+    error.cause = requestError;
+    error.isNetworkError = true;
+    throw error;
+  } finally {
+    if (timeoutId) {
+      window.clearTimeout(timeoutId);
+    }
+  }
 
   const contentType = response.headers.get("content-type") || "";
   const hasJson = contentType.includes("application/json");
@@ -45,7 +73,8 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
-    const error = new Error(data?.message || `Request failed with status ${response.status}`);
+    const fallbackMessage = STATUS_MESSAGES[response.status] || `Request failed with status ${response.status}`;
+    const error = new Error(data?.message || fallbackMessage);
     error.status = response.status;
     error.body = data;
     throw error;

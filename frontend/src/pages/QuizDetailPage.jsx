@@ -89,8 +89,8 @@ export default function QuizDetailPage() {
   if (notFound) {
     return (
       <ErrorState
-        title="Quiz not found"
-        message="This quiz is unavailable or has not been published."
+        title="Không tìm thấy quiz."
+        message="Quiz này không tồn tại hoặc chưa được xuất bản."
         actionLabel="Back to catalog"
         onAction={() => navigate("/quizzes")}
       />

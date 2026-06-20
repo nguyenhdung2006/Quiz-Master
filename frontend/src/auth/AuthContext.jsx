@@ -6,27 +6,37 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [accessToken, setTokenState] = useState(() => getAccessToken());
   const [currentUser, setCurrentUser] = useState(null);
+  const [authError, setAuthError] = useState(null);
   const [loading, setLoading] = useState(Boolean(getAccessToken()));
 
   const clearAuth = useCallback(() => {
     setAccessToken(null);
     setTokenState(null);
     setCurrentUser(null);
+    setAuthError(null);
   }, []);
 
   const refreshCurrentUser = useCallback(async () => {
     if (!getAccessToken()) {
       setLoading(false);
       setCurrentUser(null);
+      setAuthError(null);
       return null;
     }
 
     setLoading(true);
+    setAuthError(null);
     try {
       const user = await apiClient.get("/api/auth/me");
       setCurrentUser(user);
       return user;
-    } catch {
+    } catch (error) {
+      if (error.isNetworkError) {
+        setCurrentUser(null);
+        setAuthError(error);
+        return null;
+      }
+
       clearAuth();
       return null;
     } finally {
@@ -46,6 +56,7 @@ export function AuthProvider({ children }) {
 
     setAccessToken(authResponse.accessToken);
     setTokenState(authResponse.accessToken);
+    setAuthError(null);
 
     try {
       const user = await apiClient.get("/api/auth/me");
@@ -80,6 +91,7 @@ export function AuthProvider({ children }) {
   const value = useMemo(
     () => ({
       accessToken,
+      authError,
       currentUser,
       loading,
       isAuthenticated: Boolean(accessToken && currentUser),
@@ -88,7 +100,7 @@ export function AuthProvider({ children }) {
       logout,
       refreshCurrentUser,
     }),
-    [accessToken, currentUser, loading, login, logout, refreshCurrentUser, register],
+    [accessToken, authError, currentUser, loading, login, logout, refreshCurrentUser, register],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

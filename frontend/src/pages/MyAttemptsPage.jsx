@@ -6,6 +6,8 @@ import AttemptHistoryList from "../components/attempt/AttemptHistoryList.jsx";
 import EmptyState from "../components/common/EmptyState.jsx";
 import ErrorState from "../components/common/ErrorState.jsx";
 import LoadingState from "../components/common/LoadingState.jsx";
+import Button from "../components/ui/Button.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
 
 export default function MyAttemptsPage() {
   const { currentUser } = useAuth();
@@ -61,11 +63,9 @@ export default function MyAttemptsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <p className="text-sm font-semibold uppercase tracking-wide text-purple-700">History</p>
-        <h1 className="mt-3 text-3xl font-semibold text-slate-950">My Attempts</h1>
-        <p className="mt-2 text-sm text-slate-500">Review your completed quiz attempts.</p>
-      </section>
+      <PageHeader eyebrow="History" title="My Attempts">
+        <p>Review submitted quiz attempts, open detailed results, and revisit answer explanations.</p>
+      </PageHeader>
 
       {loading && <LoadingState message="Loading your attempts..." />}
 
@@ -91,12 +91,9 @@ function EmptyAttemptsState() {
   return (
     <div className="space-y-4">
       <EmptyState title="No attempts yet." message="Start a quiz to see your history here." />
-      <Link
-        to="/quizzes"
-        className="inline-flex rounded-md bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-800"
-      >
+      <Button as={Link} to="/quizzes">
         Browse quizzes
-      </Link>
+      </Button>
     </div>
   );
 }

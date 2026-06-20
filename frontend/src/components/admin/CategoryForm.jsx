@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import Button from "../ui/Button.jsx";
+import Card from "../ui/Card.jsx";
+import { Input } from "../ui/FormControls.jsx";
 
 const emptyValues = {
   name: "",
@@ -38,7 +41,7 @@ export default function CategoryForm({ editingCategory, busy, error, onCancelEdi
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
+    <Card as="form" onSubmit={handleSubmit} className="xl:sticky xl:top-6">
       <div>
         <h2 className="text-lg font-semibold text-slate-950">
           {editingCategory ? "Edit category" : "Create category"}
@@ -48,55 +51,49 @@ export default function CategoryForm({ editingCategory, busy, error, onCancelEdi
         </p>
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">Name</span>
-          <input
-            type="text"
-            value={values.name}
-            onChange={handleNameChange}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100"
-            placeholder="Software Engineering"
-            disabled={busy}
-          />
-        </label>
+      <div className="mt-5 grid gap-4">
+        <Input
+          type="text"
+          value={values.name}
+          onChange={handleNameChange}
+          label="Name"
+          placeholder="Software Engineering"
+          disabled={busy}
+        />
 
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">Slug</span>
-          <input
-            type="text"
-            value={values.slug}
-            onChange={(event) => setValues((current) => ({ ...current, slug: event.target.value }))}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100"
-            placeholder="software-engineering"
-            disabled={busy}
-          />
-        </label>
+        <Input
+          type="text"
+          value={values.slug}
+          onChange={(event) => setValues((current) => ({ ...current, slug: event.target.value }))}
+          label="Slug"
+          message="Must be unique. Used by the backend to identify the category."
+          placeholder="software-engineering"
+          disabled={busy}
+        />
       </div>
 
       {error && <p className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
       <div className="mt-5 flex flex-wrap gap-3">
-        <button
+        <Button
           type="submit"
           disabled={busy || !values.name.trim() || !values.slug.trim()}
-          className="rounded-md bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-800 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
           {busy ? "Saving..." : editingCategory ? "Save category" : "Create category"}
-        </button>
+        </Button>
 
         {editingCategory && (
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={onCancelEdit}
             disabled={busy}
-            className="rounded-md bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Cancel
-          </button>
+          </Button>
         )}
       </div>
-    </form>
+    </Card>
   );
 }
 

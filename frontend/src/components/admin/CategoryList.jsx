@@ -1,3 +1,6 @@
+import Button from "../ui/Button.jsx";
+import Card from "../ui/Card.jsx";
+
 export default function CategoryList({
   categories,
   confirmingId,
@@ -8,11 +11,15 @@ export default function CategoryList({
   onRequestDelete,
 }) {
   return (
-    <div className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-      <div className="grid grid-cols-[1fr_1fr_auto] gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-        <span>Name</span>
-        <span>Slug</span>
-        <span className="text-right">Actions</span>
+    <Card className="overflow-hidden" padding="none">
+      <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-950">Category list</h2>
+            <p className="text-sm text-slate-500">{categories.length} categories available.</p>
+          </div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Name / slug / actions</p>
+        </div>
       </div>
 
       <div className="divide-y divide-slate-200">
@@ -26,52 +33,59 @@ export default function CategoryList({
               <p className="font-medium text-slate-950">{category.name}</p>
               <p className="text-xs text-slate-500">ID {category.id}</p>
             </div>
-            <code className="rounded bg-slate-100 px-2 py-1 text-sm text-slate-700">{category.slug}</code>
+            <code className="w-fit rounded-lg bg-slate-100 px-2.5 py-1.5 text-sm text-slate-700">
+              {category.slug}
+            </code>
             <div className="flex justify-start gap-2 md:justify-end">
               {confirmingId === category.id ? (
                 <>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => onConfirmDelete(category)}
                     disabled={deletingId === category.id}
                     data-testid={`confirm-delete-category-${category.id}`}
-                    className="rounded-md bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    variant="danger"
+                    size="sm"
                   >
                     {deletingId === category.id ? "Deleting..." : "Confirm delete"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={onCancelDelete}
                     disabled={deletingId === category.id}
-                    className="rounded-md bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                    variant="secondary"
+                    size="sm"
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
-                  <button
+                  <Button
                     type="button"
                     onClick={() => onEdit(category)}
                     data-testid={`edit-category-${category.id}`}
-                    className="rounded-md bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-200"
+                    variant="secondary"
+                    size="sm"
                   >
                     Edit
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => onRequestDelete(category)}
                     data-testid={`delete-category-${category.id}`}
-                    className="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-700 hover:bg-red-50"
                   >
                     Delete
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }

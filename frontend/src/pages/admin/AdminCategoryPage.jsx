@@ -10,6 +10,7 @@ import CategoryList from "../../components/admin/CategoryList.jsx";
 import EmptyState from "../../components/common/EmptyState.jsx";
 import ErrorState from "../../components/common/ErrorState.jsx";
 import LoadingState from "../../components/common/LoadingState.jsx";
+import PageHeader from "../../components/ui/PageHeader.jsx";
 
 export default function AdminCategoryPage() {
   const [categories, setCategories] = useState([]);
@@ -79,58 +80,58 @@ export default function AdminCategoryPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <p className="text-sm font-semibold uppercase tracking-wide text-purple-700">Admin</p>
-        <h1 className="mt-3 text-3xl font-semibold text-slate-950">Categories</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Manage the subjects used to organize quizzes.
-        </p>
-      </section>
+      <PageHeader eyebrow="Admin" title="Categories">
+        Manage the subjects used to organize quizzes. Categories with quizzes remain protected from deletion.
+      </PageHeader>
 
-      <CategoryForm
-        editingCategory={editingCategory}
-        busy={saving}
-        error={actionError}
-        onCancelEdit={() => {
-          setEditingCategory(null);
-          setActionError(null);
-        }}
-        onSubmit={handleSubmit}
-      />
-
-      {loading && <LoadingState message="Loading categories..." />}
-
-      {!loading && loadError && (
-        <ErrorState
-          title="Could not load categories."
-          message={loadError.message || "Please check your connection and try again."}
-          actionLabel="Try again"
-          onAction={loadCategories}
-        />
-      )}
-
-      {!loading && !loadError && categories.length === 0 && (
-        <EmptyState title="No categories yet." message="Create your first category." />
-      )}
-
-      {!loading && !loadError && categories.length > 0 && (
-        <CategoryList
-          categories={categories}
-          confirmingId={confirmingDeleteId}
-          deletingId={deletingId}
-          onCancelDelete={() => setConfirmingDeleteId(null)}
-          onConfirmDelete={handleConfirmDelete}
-          onEdit={(category) => {
-            setEditingCategory(category);
-            setConfirmingDeleteId(null);
+      <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
+        <CategoryForm
+          editingCategory={editingCategory}
+          busy={saving}
+          error={actionError}
+          onCancelEdit={() => {
+            setEditingCategory(null);
             setActionError(null);
           }}
-          onRequestDelete={(category) => {
-            setConfirmingDeleteId(category.id);
-            setActionError(null);
-          }}
+          onSubmit={handleSubmit}
         />
-      )}
+
+        <div className="min-w-0 space-y-4">
+          {loading && <LoadingState message="Loading categories..." />}
+
+          {!loading && loadError && (
+            <ErrorState
+              title="Could not load categories."
+              message={loadError.message || "Please check your connection and try again."}
+              actionLabel="Try again"
+              onAction={loadCategories}
+            />
+          )}
+
+          {!loading && !loadError && categories.length === 0 && (
+            <EmptyState title="No categories yet." message="Create your first category." />
+          )}
+
+          {!loading && !loadError && categories.length > 0 && (
+            <CategoryList
+              categories={categories}
+              confirmingId={confirmingDeleteId}
+              deletingId={deletingId}
+              onCancelDelete={() => setConfirmingDeleteId(null)}
+              onConfirmDelete={handleConfirmDelete}
+              onEdit={(category) => {
+                setEditingCategory(category);
+                setConfirmingDeleteId(null);
+                setActionError(null);
+              }}
+              onRequestDelete={(category) => {
+                setConfirmingDeleteId(category.id);
+                setActionError(null);
+              }}
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

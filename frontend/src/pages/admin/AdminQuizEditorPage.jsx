@@ -18,6 +18,9 @@ import QuizMetadataForm from "../../components/admin/QuizMetadataForm.jsx";
 import EmptyState from "../../components/common/EmptyState.jsx";
 import ErrorState from "../../components/common/ErrorState.jsx";
 import LoadingState from "../../components/common/LoadingState.jsx";
+import Button from "../../components/ui/Button.jsx";
+import Card from "../../components/ui/Card.jsx";
+import PageHeader from "../../components/ui/PageHeader.jsx";
 
 export default function AdminQuizEditorPage() {
   const { id, quizId } = useParams();
@@ -169,27 +172,19 @@ export default function AdminQuizEditorPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-purple-700">Admin</p>
-            <h1 className="mt-3 text-3xl font-semibold text-slate-950">
-              {editing ? "Edit Quiz" : "Create Quiz"}
-            </h1>
-            <p className="mt-2 text-sm text-slate-500">
-              {editing
-                ? "Manage quiz metadata, questions, and publish status."
-                : "Create a draft quiz by setting its basic metadata."}
-            </p>
-          </div>
-          <Link
-            to="/admin/quizzes"
-            className="inline-flex rounded-md bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-200"
-          >
+      <PageHeader
+        eyebrow="Admin"
+        title={editing ? "Edit quiz" : "Create quiz"}
+        actions={
+          <Button as={Link} to="/admin/quizzes" variant="secondary">
             Back to quiz list
-          </Link>
-        </div>
-      </section>
+          </Button>
+        }
+      >
+        {editing
+          ? "Manage quiz metadata, questions, and publish status without changing public safety rules."
+          : "Create a draft quiz by setting its basic metadata first."}
+      </PageHeader>
 
       {categories.length === 0 && (
         <EmptyState title="No categories available." message="Create a category before creating quizzes." />
@@ -219,43 +214,58 @@ export default function AdminQuizEditorPage() {
 
       {editing && (
         <section className="space-y-5">
-          <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <h2 className="text-2xl font-semibold text-slate-950">Questions</h2>
-            <p className="mt-2 text-sm text-slate-500">
-              Add single-choice questions with exactly one correct option.
-            </p>
+          <Card>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold text-slate-950">Question editor</h2>
+                <p className="mt-2 text-sm text-slate-500">
+                  Add single-choice questions with exactly one correct option.
+                </p>
+              </div>
+              <p className="text-sm font-semibold text-purple-700">
+                {(quiz?.questions || []).length} questions
+              </p>
+            </div>
+          </Card>
+
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+            <QuestionEditor
+              defaultDisplayOrder={(quiz?.questions || []).length + 1}
+              disabled={Boolean(quiz?.published)}
+              editingQuestion={editingQuestion}
+              error={questionError}
+              saving={questionSaving}
+              onCancelEdit={() => {
+                setEditingQuestion(null);
+                setQuestionError(null);
+              }}
+              onSubmit={handleQuestionSubmit}
+            />
+
+            <QuestionList
+              confirmingDeleteId={confirmingDeleteQuestionId}
+              deletingId={deletingQuestionId}
+              disabled={Boolean(quiz?.published)}
+              onCancelDelete={() => setConfirmingDeleteQuestionId(null)}
+              onConfirmDelete={handleDeleteQuestion}
+              onEdit={(question) => {
+                setEditingQuestion(question);
+                setConfirmingDeleteQuestionId(null);
+                setQuestionError(null);
+              }}
+              onRequestDelete={(question) => {
+                setConfirmingDeleteQuestionId(question.id);
+                setQuestionError(null);
+              }}
+              questions={quiz?.questions || []}
+            />
           </div>
 
-          <QuestionEditor
-            defaultDisplayOrder={(quiz?.questions || []).length + 1}
-            disabled={Boolean(quiz?.published)}
-            editingQuestion={editingQuestion}
-            error={questionError}
-            saving={questionSaving}
-            onCancelEdit={() => {
-              setEditingQuestion(null);
-              setQuestionError(null);
-            }}
-            onSubmit={handleQuestionSubmit}
-          />
-
-          <QuestionList
-            confirmingDeleteId={confirmingDeleteQuestionId}
-            deletingId={deletingQuestionId}
-            disabled={Boolean(quiz?.published)}
-            onCancelDelete={() => setConfirmingDeleteQuestionId(null)}
-            onConfirmDelete={handleDeleteQuestion}
-            onEdit={(question) => {
-              setEditingQuestion(question);
-              setConfirmingDeleteQuestionId(null);
-              setQuestionError(null);
-            }}
-            onRequestDelete={(question) => {
-              setConfirmingDeleteQuestionId(question.id);
-              setQuestionError(null);
-            }}
-            questions={quiz?.questions || []}
-          />
+          {quiz?.published && (
+            <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-100">
+              Published quiz structure is locked. Unpublish before editing questions or options.
+            </p>
+          )}
         </section>
       )}
     </div>

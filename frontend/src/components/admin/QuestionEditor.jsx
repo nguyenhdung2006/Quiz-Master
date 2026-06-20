@@ -1,4 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import Button from "../ui/Button.jsx";
+import Card from "../ui/Card.jsx";
+import { Input, Textarea } from "../ui/FormControls.jsx";
+import { classNames } from "../ui/classNames.js";
+
+const optionLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 function defaultOptions() {
   return [
@@ -117,7 +123,7 @@ export default function QuestionEditor({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <Card as="form" onSubmit={handleSubmit}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-slate-950">
@@ -128,80 +134,88 @@ export default function QuestionEditor({
           </p>
         </div>
         {editingQuestion && (
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={onCancelEdit}
             disabled={saving}
-            className="rounded-md bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Cancel edit
-          </button>
+          </Button>
         )}
       </div>
 
       {disabled && (
-        <p className="mt-5 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <p className="mt-5 rounded-lg bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-800 ring-1 ring-amber-100">
           This quiz is published. Unpublish it before editing questions.
         </p>
       )}
 
       <div className="mt-6 grid gap-5">
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">Question content</span>
-          <textarea
-            value={values.content}
-            onChange={(event) => setValues((current) => ({ ...current, content: event.target.value }))}
-            className="mt-1 min-h-24 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100"
-            disabled={disabled || saving}
-            placeholder="What is JVM?"
-          />
-        </label>
+        <Textarea
+          value={values.content}
+          onChange={(event) => setValues((current) => ({ ...current, content: event.target.value }))}
+          label="Question content"
+          className="min-h-24"
+          disabled={disabled || saving}
+          placeholder="What is JVM?"
+        />
 
         <div className="grid gap-5 md:grid-cols-[1fr_160px]">
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Explanation</span>
-            <textarea
-              value={values.explanation}
-              onChange={(event) => setValues((current) => ({ ...current, explanation: event.target.value }))}
-              className="mt-1 min-h-20 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100"
-              disabled={disabled || saving}
-              placeholder="JVM runs Java bytecode."
-            />
-          </label>
+          <Textarea
+            value={values.explanation}
+            onChange={(event) => setValues((current) => ({ ...current, explanation: event.target.value }))}
+            label="Explanation"
+            className="min-h-20"
+            disabled={disabled || saving}
+            placeholder="JVM runs Java bytecode."
+          />
 
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Display order</span>
-            <input
-              type="number"
-              min="1"
-              value={values.displayOrder}
-              onChange={(event) => setValues((current) => ({ ...current, displayOrder: event.target.value }))}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100"
-              disabled={disabled || saving}
-            />
-          </label>
+          <Input
+            type="number"
+            min="1"
+            value={values.displayOrder}
+            onChange={(event) => setValues((current) => ({ ...current, displayOrder: event.target.value }))}
+            label="Display order"
+            disabled={disabled || saving}
+          />
         </div>
 
-        <div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="text-sm font-semibold text-slate-800">Options</h3>
-            <button
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Answer options</h3>
+              <p className="mt-1 text-xs text-slate-500">Single-choice only. Exactly one option must be correct.</p>
+            </div>
+            <Button
               type="button"
               onClick={addOption}
               disabled={disabled || saving}
-              className="rounded-md bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+              variant="secondary"
+              size="sm"
             >
               Add option
-            </button>
+            </Button>
           </div>
 
-          <div className="mt-3 space-y-3">
+          <div className="mt-4 space-y-3">
             {values.options.map((option, index) => (
               <div
                 key={index}
-                className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 md:grid-cols-[auto_1fr_120px_auto]"
+                className={classNames(
+                  "grid gap-3 rounded-xl border bg-white p-3 transition md:grid-cols-[auto_minmax(0,1fr)_110px_auto]",
+                  option.correct ? "border-emerald-200 ring-2 ring-emerald-50" : "border-slate-200",
+                )}
               >
-                <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+                  <span
+                    className={classNames(
+                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold",
+                      option.correct ? "bg-emerald-100 text-emerald-700" : "bg-purple-50 text-purple-700",
+                    )}
+                  >
+                    {optionLetters[index] || index + 1}
+                  </span>
                   <input
                     type="radio"
                     name="correct-option"
@@ -213,33 +227,33 @@ export default function QuestionEditor({
                   Correct
                 </label>
 
-                <input
+                <Input
                   type="text"
                   value={option.content}
                   onChange={(event) => updateOption(index, { content: event.target.value })}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100"
                   placeholder={`Option ${index + 1}`}
                   disabled={disabled || saving}
                 />
 
-                <input
+                <Input
                   type="number"
                   min="1"
                   value={option.displayOrder}
                   onChange={(event) => updateOption(index, { displayOrder: event.target.value })}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100"
                   disabled={disabled || saving}
                   aria-label={`Option ${index + 1} display order`}
                 />
 
-                <button
+                <Button
                   type="button"
                   onClick={() => removeOption(index)}
                   disabled={disabled || saving || values.options.length <= 2}
-                  className="rounded-md bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-700 hover:bg-red-50"
                 >
                   Remove
-                </button>
+                </Button>
               </div>
             ))}
           </div>
@@ -252,14 +266,14 @@ export default function QuestionEditor({
         </p>
       )}
 
-      <button
+      <Button
         type="submit"
         disabled={disabled || saving}
-        className="mt-6 rounded-md bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+        className="mt-6"
       >
         {saving ? "Saving..." : editingQuestion ? "Save changes" : "Add question"}
-      </button>
-    </form>
+      </Button>
+    </Card>
   );
 }
 

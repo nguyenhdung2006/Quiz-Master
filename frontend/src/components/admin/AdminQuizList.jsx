@@ -1,28 +1,27 @@
 import { Link } from "react-router-dom";
+import Badge from "../ui/Badge.jsx";
+import Button from "../ui/Button.jsx";
+import Card from "../ui/Card.jsx";
 
 export default function AdminQuizList({ quizzes }) {
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4">
       {quizzes.map((quiz) => (
-        <article key={quiz.id} className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
+        <Card key={quiz.id} as="article" className="overflow-hidden" padding="none">
+          <div className="grid gap-0 lg:grid-cols-[1fr_auto]">
+            <div className="p-5 sm:p-6">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-semibold text-slate-950">{quiz.title}</h2>
-                <span
-                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                    quiz.published ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
-                  }`}
-                >
+                <h2 className="text-xl font-semibold text-slate-950">{quiz.title}</h2>
+                <Badge variant={quiz.published ? "success" : "warning"}>
                   {quiz.published ? "Published" : "Draft"}
-                </span>
+                </Badge>
               </div>
 
               {quiz.description && (
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">{quiz.description}</p>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{quiz.description}</p>
               )}
 
-              <dl className="mt-4 grid gap-3 sm:grid-cols-4">
+              <dl className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <Metric label="Category" value={quiz.category?.name || "-"} />
                 <Metric label="Questions" value={quiz.questionCount ?? "-"} />
                 <Metric label="Time limit" value={quiz.timeLimitMinutes ? `${quiz.timeLimitMinutes} min` : "-"} />
@@ -30,16 +29,13 @@ export default function AdminQuizList({ quizzes }) {
               </dl>
             </div>
 
-            <div className="flex shrink-0 flex-wrap gap-3">
-              <Link
-                to={`/admin/quizzes/${quiz.id}/edit`}
-                className="rounded-md bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-800"
-              >
+            <div className="flex items-center border-t border-slate-200 bg-slate-50 p-5 lg:border-l lg:border-t-0">
+              <Button as={Link} to={`/admin/quizzes/${quiz.id}/edit`} className="w-full lg:w-auto">
                 Edit
-              </Link>
+              </Button>
             </div>
           </div>
-        </article>
+        </Card>
       ))}
     </div>
   );
@@ -47,7 +43,7 @@ export default function AdminQuizList({ quizzes }) {
 
 function Metric({ label, value }) {
   return (
-    <div>
+    <div className="rounded-xl bg-slate-50 px-3 py-3 ring-1 ring-slate-100">
       <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
       <dd className="mt-1 text-sm font-medium text-slate-900">{value}</dd>
     </div>

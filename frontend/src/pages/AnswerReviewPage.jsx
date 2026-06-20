@@ -4,6 +4,9 @@ import { getAttemptResult } from "../api/attemptApi.js";
 import ErrorState from "../components/common/ErrorState.jsx";
 import LoadingState from "../components/common/LoadingState.jsx";
 import ReviewQuestionCard from "../components/attempt/ReviewQuestionCard.jsx";
+import Badge from "../components/ui/Badge.jsx";
+import Button from "../components/ui/Button.jsx";
+import Card from "../components/ui/Card.jsx";
 
 export default function AnswerReviewPage() {
   const { attemptId } = useParams();
@@ -45,37 +48,91 @@ export default function AnswerReviewPage() {
     );
   }
 
+  const questions = result.questions || [];
+  const skippedCount = questions.filter((question) => question.selectedOptionId == null).length;
+  const wrongCount =
+    result.wrongCount ?? Math.max(0, (result.totalQuestions || 0) - (result.correctCount || 0) - skippedCount);
+
   return (
     <div className="space-y-6">
-      <section className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <p className="text-sm font-semibold uppercase tracking-wide text-purple-700">Answer review</p>
+      <Card padding="lg">
+        <Badge variant="purple">Answer review</Badge>
         <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-slate-950">{result.quizTitle}</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-950">{result.quizTitle}</h1>
             <p className="mt-2 text-sm text-slate-500">
               Score {result.scorePercentage}% - {result.correctCount}/{result.totalQuestions} correct
             </p>
           </div>
-          <div className="flex gap-3">
-            <Link
-              to={`/attempts/${result.attemptId}/result`}
-              className="rounded-md bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-800"
-            >
+          <div className="flex flex-wrap gap-3">
+            <Button as={Link} to={`/attempts/${result.attemptId}/result`}>
               Result
-            </Link>
-            <Link
-              to="/quizzes"
-              className="rounded-md bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-200"
-            >
+            </Button>
+            <Button as={Link} to="/quizzes" variant="secondary">
               Back to quizzes
-            </Link>
+            </Button>
           </div>
         </div>
-      </section>
+      </Card>
 
-      {(result.questions || []).map((question, index) => (
-        <ReviewQuestionCard key={question.questionId} question={question} questionNumber={index + 1} />
-      ))}
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-5">
+          {questions.map((question, index) => (
+            <ReviewQuestionCard key={question.questionId} question={question} questionNumber={index + 1} />
+          ))}
+        </div>
+
+        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <Card padding="lg">
+            <h2 className="text-sm font-semibold text-slate-900">Review summary</h2>
+            <div className="mt-4 grid gap-3 text-sm">
+              <SummaryRow label="Score" value={`${result.scorePercentage}%`} />
+              <SummaryRow label="Correct" tone="success" value={result.correctCount ?? 0} />
+              <SummaryRow label="Wrong" tone="danger" value={wrongCount} />
+              <SummaryRow label="Skipped" tone="warning" value={skippedCount} />
+            </div>
+          </Card>
+
+          <Card padding="lg">
+            <h2 className="text-sm font-semibold text-slate-900">Questions</h2>
+            <div className="mt-4 grid grid-cols-5 gap-2">
+              {questions.map((question, index) => {
+                const skipped = question.selectedOptionId == null;
+                const statusClass = skipped
+                  ? "bg-slate-100 text-slate-600"
+                  : question.correct
+                    ? "bg-emerald-100 text-emerald-800"
+                    : "bg-red-100 text-red-800";
+
+                return (
+                  <span
+                    key={question.questionId}
+                    className={`flex h-10 items-center justify-center rounded-full text-sm font-bold ${statusClass}`}
+                  >
+                    {index + 1}
+                  </span>
+                );
+              })}
+            </div>
+          </Card>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function SummaryRow({ label, tone = "neutral", value }) {
+  const toneClass = {
+    danger: "text-red-700",
+    neutral: "text-slate-950",
+    success: "text-emerald-700",
+    warning: "text-amber-700",
+  }[tone];
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
+      <span className="text-slate-500">{label}</span>
+      <span className={`font-bold ${toneClass}`}>{value}</span>
     </div>
   );
 }

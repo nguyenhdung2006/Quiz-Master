@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
+import PageContainer from "../components/ui/PageContainer.jsx";
 
 const linkClass = ({ isActive }) =>
   `rounded px-3 py-2 text-sm font-medium ${
@@ -12,7 +13,7 @@ export default function PublicLayout() {
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="border-b border-slate-200 bg-white">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <NavLink to="/" className="text-lg font-semibold text-slate-950">
             QuizMaster
           </NavLink>
@@ -59,9 +60,9 @@ export default function PublicLayout() {
           </div>
         </nav>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <PageContainer>
         <Outlet />
-      </main>
+      </PageContainer>
     </div>
   );
 }

@@ -1,7 +1,10 @@
+import Card from "../ui/Card.jsx";
+
 export default function LoadingState({ message = "Loading..." }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-5 py-6 text-sm text-slate-500 shadow-sm">
+    <Card className="flex items-center gap-3 px-5 py-6 text-sm text-slate-500" padding="none">
+      <span className="h-2.5 w-2.5 rounded-full bg-purple-500" />
       {message}
-    </div>
+    </Card>
   );
 }

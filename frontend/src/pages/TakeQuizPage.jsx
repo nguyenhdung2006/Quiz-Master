@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { submitAttempt } from "../api/attemptApi.js";
+import { getTakeAttempt, submitAttempt } from "../api/attemptApi.js";
 import ErrorState from "../components/common/ErrorState.jsx";
+import LoadingState from "../components/common/LoadingState.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
 import Badge from "../components/ui/Badge.jsx";
@@ -9,22 +10,126 @@ import ProgressBar from "../components/quiz/ProgressBar.jsx";
 import QuestionCard from "../components/quiz/QuestionCard.jsx";
 import QuestionNavigator from "../components/quiz/QuestionNavigator.jsx";
 
+function getStoredAnswerKey(attemptId) {
+  return `quizmaster.takeAttempt.${attemptId}.answers`;
+}
+
+function readStoredAnswers(attemptId) {
+  if (!attemptId) {
+    return {};
+  }
+
+  try {
+    const storedValue = localStorage.getItem(getStoredAnswerKey(attemptId));
+    return storedValue ? JSON.parse(storedValue) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredAnswers(attemptId, answers) {
+  if (!attemptId) {
+    return;
+  }
+
+  localStorage.setItem(getStoredAnswerKey(attemptId), JSON.stringify(answers));
+}
+
+function clearStoredAnswers(attemptId) {
+  if (!attemptId) {
+    return;
+  }
+
+  localStorage.removeItem(getStoredAnswerKey(attemptId));
+}
+
 export default function TakeQuizPage() {
   const { attemptId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const attempt = location.state?.attempt;
+  const stateAttempt = location.state?.attempt;
+  const initialAttempt =
+    stateAttempt &&
+    String(stateAttempt.attemptId) === String(attemptId) &&
+    stateAttempt.questions?.length > 0
+      ? stateAttempt
+      : null;
+  const [attempt, setAttempt] = useState(initialAttempt);
+  const [loadingAttempt, setLoadingAttempt] = useState(!initialAttempt);
+  const [loadError, setLoadError] = useState("");
   const questions = useMemo(() => attempt?.questions || [], [attempt]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [selectedAnswers, setSelectedAnswers] = useState(() => readStoredAnswers(attemptId));
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    setSelectedAnswers(readStoredAnswers(attemptId));
+    setCurrentIndex(0);
+  }, [attemptId]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadAttempt() {
+      if (initialAttempt) {
+        setAttempt(initialAttempt);
+        setLoadingAttempt(false);
+        setLoadError("");
+        return;
+      }
+
+      setLoadingAttempt(true);
+      setLoadError("");
+
+      try {
+        const restoredAttempt = await getTakeAttempt(attemptId);
+
+        if (!active) {
+          return;
+        }
+
+        if (restoredAttempt.submitted) {
+          clearStoredAnswers(attemptId);
+          navigate(`/attempts/${attemptId}/result`, { replace: true });
+          return;
+        }
+
+        if (!restoredAttempt.questions?.length) {
+          setLoadError("This attempt does not have questions available.");
+          setAttempt(null);
+          return;
+        }
+
+        setAttempt(restoredAttempt);
+      } catch (requestError) {
+        if (active) {
+          setLoadError(requestError.message || "Unable to load this attempt.");
+          setAttempt(null);
+        }
+      } finally {
+        if (active) {
+          setLoadingAttempt(false);
+        }
+      }
+    }
+
+    loadAttempt();
+
+    return () => {
+      active = false;
+    };
+  }, [attemptId, initialAttempt, navigate]);
+
+  if (loadingAttempt) {
+    return <LoadingState message="Restoring your quiz attempt..." />;
+  }
 
   if (!attempt || String(attempt.attemptId) !== String(attemptId) || questions.length === 0) {
     return (
       <ErrorState
         title="Cannot load this attempt"
-        message="Please start the quiz again."
+        message={loadError || "Please start the quiz again."}
         actionLabel="Back to quizzes"
         onAction={() => navigate("/quizzes")}
       />
@@ -36,10 +141,14 @@ export default function TakeQuizPage() {
   const totalQuestions = questions.length;
 
   function handleSelectOption(questionId, optionId) {
-    setSelectedAnswers((answers) => ({
-      ...answers,
-      [questionId]: optionId,
-    }));
+    setSelectedAnswers((answers) => {
+      const nextAnswers = {
+        ...answers,
+        [questionId]: optionId,
+      };
+      writeStoredAnswers(attemptId, nextAnswers);
+      return nextAnswers;
+    });
   }
 
   function goPrevious() {
@@ -80,6 +189,7 @@ export default function TakeQuizPage() {
 
     try {
       await submitAttempt(attemptId, answers);
+      clearStoredAnswers(attemptId);
       navigate(`/attempts/${attemptId}/result`);
     } catch (requestError) {
       setSubmitError(requestError.message || "Unable to submit this attempt.");

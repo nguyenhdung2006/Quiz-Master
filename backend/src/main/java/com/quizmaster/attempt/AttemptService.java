@@ -159,6 +159,49 @@ public class AttemptService {
     }
 
     @Transactional(readOnly = true)
+    public TakeAttemptResponse getTakeAttempt(Long attemptId, String userEmail) {
+        User user = findUser(userEmail);
+        Attempt attempt = findAttemptForUser(attemptId, user.getId());
+        Quiz quiz = attempt.getQuiz();
+
+        if (attempt.getSubmittedAt() != null) {
+            return new TakeAttemptResponse(
+                    attempt.getId(),
+                    quiz.getId(),
+                    quiz.getTitle(),
+                    quiz.getTimeLimitMinutes(),
+                    true,
+                    attempt.getSubmittedAt(),
+                    List.of()
+            );
+        }
+
+        List<Question> questions = questionRepository.findByQuizIdOrderByDisplayOrderAsc(quiz.getId());
+        Map<Long, List<Option>> optionsByQuestionId = loadOptionsByQuestionId(questions);
+        validateQuizCanBeStarted(questions, optionsByQuestionId);
+
+        List<StartAttemptQuestionResponse> questionResponses = questions.stream()
+                .map(question -> StartAttemptQuestionResponse.from(
+                        question,
+                        optionsByQuestionId.get(question.getId())
+                                .stream()
+                                .map(StartAttemptOptionResponse::from)
+                                .toList()
+                ))
+                .toList();
+
+        return new TakeAttemptResponse(
+                attempt.getId(),
+                quiz.getId(),
+                quiz.getTitle(),
+                quiz.getTimeLimitMinutes(),
+                false,
+                null,
+                questionResponses
+        );
+    }
+
+    @Transactional(readOnly = true)
     public List<AttemptHistoryResponse> getMyAttempts(String userEmail) {
         User user = findUser(userEmail);
         return attemptRepository.findByUserIdOrderByStartedAtDesc(user.getId())

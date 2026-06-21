@@ -35,6 +35,14 @@ public class AttemptController {
         return attemptService.submitAttempt(id, request, authentication.getName());
     }
 
+    @GetMapping("/{id}/take")
+    public TakeAttemptResponse getTakeAttempt(
+            @PathVariable Long id,
+            Authentication authentication
+    ) {
+        return attemptService.getTakeAttempt(id, authentication.getName());
+    }
+
     @GetMapping("/{id}/result")
     public AttemptResultResponse getResult(
             @PathVariable Long id,

@@ -138,6 +138,83 @@ class AttemptApiTest {
     }
 
     @Test
+    void takeAttemptRestoresUnsubmittedAttemptWithoutAnswers() throws Exception {
+        User user = createUser();
+        Quiz quiz = createQuiz(true);
+        createQuestionWithOptions(quiz, 2);
+        createQuestionWithOptions(quiz, 1);
+        Long attemptId = startAttempt(user, quiz.getId());
+
+        MvcResult result = mockMvc.perform(get("/api/attempts/{id}/take", attemptId)
+                        .header("Authorization", bearer(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.attemptId").value(attemptId.intValue()))
+                .andExpect(jsonPath("$.quizId").value(quiz.getId().intValue()))
+                .andExpect(jsonPath("$.submitted").value(false))
+                .andExpect(jsonPath("$.submittedAt").doesNotExist())
+                .andExpect(jsonPath("$.questions", hasSize(2)))
+                .andExpect(jsonPath("$.questions[0].displayOrder").value(1))
+                .andExpect(jsonPath("$.questions[0].options[0].displayOrder").value(1))
+                .andReturn();
+
+        String body = result.getResponse().getContentAsString();
+        assertThat(body).doesNotContain("isCorrect");
+        assertThat(body).doesNotContain("\"correct\"");
+        assertThat(body).doesNotContain("correctAnswer");
+        assertThat(body).doesNotContain("explanation");
+        assertThat(body).doesNotContain("selectedOption");
+        assertThat(body).doesNotContain("score");
+    }
+
+    @Test
+    void takeAttemptDoesNotExposeOtherUsersAttemptOrMissingAttempt() throws Exception {
+        User owner = createUser();
+        User otherUser = createUser();
+        Quiz quiz = createQuiz(true);
+        createQuestionWithOptions(quiz, 1);
+        Long attemptId = startAttempt(owner, quiz.getId());
+
+        mockMvc.perform(get("/api/attempts/{id}/take", attemptId)
+                        .header("Authorization", bearer(otherUser)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Attempt not found"));
+
+        mockMvc.perform(get("/api/attempts/{id}/take", 99999999L)
+                        .header("Authorization", bearer(owner)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Attempt not found"));
+    }
+
+    @Test
+    void takeAttemptForSubmittedAttemptReturnsSubmittedStateOnly() throws Exception {
+        User user = createUser();
+        Quiz quiz = createQuiz(true);
+        Question question = createQuestionWithOptions(quiz, 1);
+        Option option = createdOptions.stream()
+                .filter(candidate -> candidate.getQuestion().getId().equals(question.getId()))
+                .findFirst()
+                .orElseThrow();
+        Long attemptId = startAttempt(user, quiz.getId());
+        submitOneAnswer(user, attemptId, question.getId(), option.getId());
+
+        MvcResult result = mockMvc.perform(get("/api/attempts/{id}/take", attemptId)
+                        .header("Authorization", bearer(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.attemptId").value(attemptId.intValue()))
+                .andExpect(jsonPath("$.submitted").value(true))
+                .andExpect(jsonPath("$.submittedAt").exists())
+                .andExpect(jsonPath("$.questions", hasSize(0)))
+                .andReturn();
+
+        String body = result.getResponse().getContentAsString();
+        assertThat(body).doesNotContain("isCorrect");
+        assertThat(body).doesNotContain("\"correct\"");
+        assertThat(body).doesNotContain("correctAnswer");
+        assertThat(body).doesNotContain("explanation");
+        assertThat(body).doesNotContain("selectedOption");
+    }
+
+    @Test
     void cannotStartUnpublishedQuiz() throws Exception {
         User user = createUser();
         Quiz quiz = createQuiz(false);

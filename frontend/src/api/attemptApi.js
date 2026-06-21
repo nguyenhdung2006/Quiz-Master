@@ -10,6 +10,10 @@ export function submitAttempt(attemptId, answers) {
   });
 }
 
+export function getTakeAttempt(attemptId) {
+  return apiClient.get(`/api/attempts/${encodeURIComponent(attemptId)}/take`);
+}
+
 export function getAttemptResult(attemptId) {
   return apiClient.get(`/api/attempts/${encodeURIComponent(attemptId)}/result`);
 }

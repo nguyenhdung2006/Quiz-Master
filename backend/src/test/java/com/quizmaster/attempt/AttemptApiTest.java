@@ -392,6 +392,17 @@ class AttemptApiTest {
                 .andExpect(jsonPath("$[1].attemptId").value(unsubmittedAttemptId.intValue()));
     }
 
+    @Test
+    void unsupportedReviewEndpointReturnsNotFound() throws Exception {
+        User user = createUser();
+
+        mockMvc.perform(get("/api/attempts/{id}/review", 99999999L)
+                        .header("Authorization", bearer(user)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Endpoint not found"));
+    }
+
     private Long startAttempt(User user, Long quizId) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/attempts")
                         .header("Authorization", bearer(user))

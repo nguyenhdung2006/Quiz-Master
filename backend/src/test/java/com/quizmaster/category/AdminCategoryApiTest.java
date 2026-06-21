@@ -86,6 +86,17 @@ class AdminCategoryApiTest {
     }
 
     @Test
+    void unsupportedAdminCategoryListReturnsMethodNotAllowed() throws Exception {
+        User admin = createUser(UserRole.ADMIN);
+
+        mockMvc.perform(get("/api/admin/categories")
+                        .header("Authorization", bearer(admin)))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.status").value(405))
+                .andExpect(jsonPath("$.message").value("Method not allowed"));
+    }
+
+    @Test
     void adminCanCreateCategory() throws Exception {
         User admin = createUser(UserRole.ADMIN);
         AdminCategoryRequest request = new AdminCategoryRequest("Java", uniqueSlug("java"));

@@ -219,6 +219,28 @@ class AdminQuizApiTest {
     }
 
     @Test
+    void adminQuizDetailExposesStructuralEditingLockState() throws Exception {
+        User admin = createUser(UserRole.ADMIN);
+        User user = createUser(UserRole.USER);
+        Category category = createCategory("Lock State", uniqueSlug("lock-state"));
+        Quiz unlockedQuiz = createQuiz(category, false);
+        Quiz lockedQuiz = createQuiz(category, false);
+        createQuestionWithOptions(unlockedQuiz, 1);
+        createQuestionWithOptions(lockedQuiz, 1);
+        createAttempt(user, lockedQuiz);
+
+        mockMvc.perform(get("/api/admin/quizzes/{id}", unlockedQuiz.getId())
+                        .header("Authorization", bearer(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.structuralEditingLocked").value(false));
+
+        mockMvc.perform(get("/api/admin/quizzes/{id}", lockedQuiz.getId())
+                        .header("Authorization", bearer(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.structuralEditingLocked").value(true));
+    }
+
+    @Test
     void questionValidationRejectsBadOptionCountsAndCorrectCounts() throws Exception {
         User admin = createUser(UserRole.ADMIN);
         Category category = createCategory("Software", uniqueSlug("software"));
@@ -463,6 +485,7 @@ class AdminQuizApiTest {
         assertThat(detailBody).doesNotContain("isCorrect");
         assertThat(detailBody).doesNotContain("correctAnswer");
         assertThat(detailBody).doesNotContain("explanation");
+        assertThat(detailBody).doesNotContain("structuralEditingLocked");
 
         MvcResult startResult = mockMvc.perform(post("/api/attempts")
                         .header("Authorization", bearer(user))

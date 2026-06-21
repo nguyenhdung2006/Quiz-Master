@@ -11,9 +11,14 @@ public record AdminQuizDetailResponse(
         long questionCount,
         Integer timeLimitMinutes,
         boolean published,
+        boolean structuralEditingLocked,
         List<AdminQuestionResponse> questions
 ) {
-    public static AdminQuizDetailResponse from(Quiz quiz, List<AdminQuestionResponse> questions) {
+    public static AdminQuizDetailResponse from(
+            Quiz quiz,
+            List<AdminQuestionResponse> questions,
+            boolean structuralEditingLocked
+    ) {
         return new AdminQuizDetailResponse(
                 quiz.getId(),
                 quiz.getTitle(),
@@ -22,6 +27,7 @@ public record AdminQuizDetailResponse(
                 questions.size(),
                 quiz.getTimeLimitMinutes(),
                 quiz.isPublished(),
+                structuralEditingLocked,
                 questions
         );
     }

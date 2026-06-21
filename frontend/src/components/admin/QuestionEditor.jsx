@@ -25,6 +25,7 @@ function emptyQuestion(displayOrder) {
 export default function QuestionEditor({
   defaultDisplayOrder,
   disabled,
+  disabledMessage,
   editingQuestion,
   error,
   saving,
@@ -147,7 +148,7 @@ export default function QuestionEditor({
 
       {disabled && (
         <p className="mt-5 rounded-lg bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-800 ring-1 ring-amber-100">
-          This quiz is published. Unpublish it before editing questions.
+          {disabledMessage || "This quiz is locked. Questions and options cannot be edited."}
         </p>
       )}
 

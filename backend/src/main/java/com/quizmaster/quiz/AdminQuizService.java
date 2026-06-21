@@ -153,7 +153,11 @@ public class AdminQuizService {
                 ))
                 .toList();
 
-        return AdminQuizDetailResponse.from(quiz, questionResponses);
+        return AdminQuizDetailResponse.from(
+                quiz,
+                questionResponses,
+                attemptRepository.existsByQuizId(quiz.getId())
+        );
     }
 
     private Category findCategory(Long id) {

@@ -43,6 +43,10 @@ export default function AdminQuizEditorPage() {
   const [publishError, setPublishError] = useState(null);
   const [publishMessage, setPublishMessage] = useState(null);
   const [publishing, setPublishing] = useState(false);
+  const publishedStructureLocked = Boolean(quiz?.published);
+  const attemptStructureLocked = Boolean(quiz?.structuralEditingLocked);
+  const structuralEditingDisabled = publishedStructureLocked || attemptStructureLocked;
+  const structuralLockMessage = getStructuralLockMessage(publishedStructureLocked, attemptStructureLocked);
 
   const loadPage = useCallback(async () => {
     setLoading(true);
@@ -231,7 +235,8 @@ export default function AdminQuizEditorPage() {
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
             <QuestionEditor
               defaultDisplayOrder={(quiz?.questions || []).length + 1}
-              disabled={Boolean(quiz?.published)}
+              disabled={structuralEditingDisabled}
+              disabledMessage={structuralLockMessage}
               editingQuestion={editingQuestion}
               error={questionError}
               saving={questionSaving}
@@ -245,7 +250,7 @@ export default function AdminQuizEditorPage() {
             <QuestionList
               confirmingDeleteId={confirmingDeleteQuestionId}
               deletingId={deletingQuestionId}
-              disabled={Boolean(quiz?.published)}
+              disabled={structuralEditingDisabled}
               onCancelDelete={() => setConfirmingDeleteQuestionId(null)}
               onConfirmDelete={handleDeleteQuestion}
               onEdit={(question) => {
@@ -261,13 +266,29 @@ export default function AdminQuizEditorPage() {
             />
           </div>
 
-          {quiz?.published && (
+          {structuralLockMessage && (
             <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-100">
-              Published quiz structure is locked. Unpublish before editing questions or options.
+              {structuralLockMessage}
             </p>
           )}
         </section>
       )}
     </div>
   );
+}
+
+function getStructuralLockMessage(published, hasAttempts) {
+  if (published && hasAttempts) {
+    return "This quiz is published and already has attempts. Question and option structure is locked to protect historical results and reviews.";
+  }
+
+  if (published) {
+    return "This quiz is published. Unpublish it before editing questions or options.";
+  }
+
+  if (hasAttempts) {
+    return "This quiz already has attempts, so questions and options cannot be changed. This protects learners' historical results and reviews.";
+  }
+
+  return "";
 }

@@ -7,6 +7,7 @@ import AnswerReviewPage from "./pages/AnswerReviewPage.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import MyAttemptsPage from "./pages/MyAttemptsPage.jsx";
+import NotFoundPage from "./pages/NotFoundPage.jsx";
 import QuizCatalogPage from "./pages/QuizCatalogPage.jsx";
 import QuizDetailPage from "./pages/QuizDetailPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
@@ -33,6 +34,8 @@ export default function App() {
           <Route path="/attempts" element={<MyAttemptsPage />} />
           <Route path="/me/attempts" element={<Navigate to="/attempts" replace />} />
         </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
 
       <Route element={<AdminRoute />}>

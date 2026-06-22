@@ -1,0 +1,4 @@
+app:
+  jwt:
+    # Local development only. Production must use application-prod.yaml and JWT_SECRET.
+    secret: local-dev-only-quizmaster-jwt-secret-change-before-deployment

@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
+    private static final int MINIMUM_SECRET_LENGTH = 32;
+
     private final String jwtSecret;
     private final long expirationMs;
 
@@ -24,6 +26,14 @@ public class JwtService {
             @Value("${app.jwt.secret}") String jwtSecret,
             @Value("${app.jwt.expiration-ms}") long expirationMs
     ) {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalArgumentException("JWT secret must not be blank");
+        }
+        if (jwtSecret.length() < MINIMUM_SECRET_LENGTH) {
+            throw new IllegalArgumentException(
+                    "JWT secret must be at least " + MINIMUM_SECRET_LENGTH + " characters"
+            );
+        }
         this.jwtSecret = jwtSecret;
         this.expirationMs = expirationMs;
     }

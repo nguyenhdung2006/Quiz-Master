@@ -21,15 +21,16 @@ Database:
 - Name: `quizmaster`
 - Default local URL: `jdbc:postgresql://localhost:5432/quizmaster`
 
-Configuration is in `backend/src/main/resources/application.yaml`.
+Common configuration is in `backend/src/main/resources/application.yaml`. Local development uses the
+`dev` profile by default and loads `application-dev.yaml`, which contains a clearly marked local-only JWT
+secret. Do not use that secret for a deployed environment.
 
-Local environment variables can override defaults:
+Local environment variables can override the database and token-expiration defaults:
 
 ```powershell
 $env:DB_URL="jdbc:postgresql://localhost:5432/quizmaster"
 $env:DB_USERNAME="postgres"
 $env:DB_PASSWORD="postgres"
-$env:JWT_SECRET="change-this-local-secret"
 $env:JWT_EXPIRATION_MS="86400000"
 ```
 
@@ -39,6 +40,19 @@ Run the backend:
 cd D:\QuizMaster\backend
 .\mvnw.cmd spring-boot:run
 ```
+
+For the `prod` profile, `JWT_SECRET` is required and has no fallback. It must contain at least 32
+characters. The backend fails during startup when the variable is missing, blank, or too short.
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE="prod"
+$env:JWT_SECRET="replace-with-a-strong-random-production-secret"
+cd D:\QuizMaster\backend
+.\mvnw.cmd spring-boot:run
+```
+
+This profile-specific JWT safeguard does not by itself make the application production-ready; the
+remaining Phase 7 configuration and deployment hardening still applies.
 
 Run tests:
 

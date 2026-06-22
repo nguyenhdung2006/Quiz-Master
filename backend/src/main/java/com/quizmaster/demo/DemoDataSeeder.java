@@ -205,6 +205,38 @@ public class DemoDataSeeder implements CommandLineRunner {
                         springBootQuestions()
                 ),
                 new DemoQuiz(
+                        "SQL Basics",
+                        "sql-database",
+                        "Review essential SQL querying, relational keys, grouping, sorting, and transaction concepts.",
+                        10,
+                        true,
+                        sqlBasicsQuestions()
+                ),
+                new DemoQuiz(
+                        "Networking Fundamentals",
+                        "computer-networking",
+                        "Review core web, addressing, transport, client-server, status code, and latency concepts.",
+                        10,
+                        true,
+                        networkingQuestions()
+                ),
+                new DemoQuiz(
+                        "Software Engineering Basics",
+                        "software-engineering",
+                        "Review requirements, development processes, modeling, testing, maintenance, and version control.",
+                        10,
+                        true,
+                        softwareEngineeringQuestions()
+                ),
+                new DemoQuiz(
+                        "English for IT Basics",
+                        "english-for-it",
+                        "Review common English terms used in software development, APIs, databases, and error messages.",
+                        8,
+                        true,
+                        englishForItQuestions()
+                ),
+                new DemoQuiz(
                         "Draft — Spring Security Practice",
                         "spring-boot",
                         "Practice basic authentication, authorization, JWT, and password storage concepts before publishing.",
@@ -389,6 +421,326 @@ public class DemoDataSeeder implements CommandLineRunner {
                         "Validate the token, including its signature and relevant claims such as expiration.",
                         "Store the user's plaintext password inside the token.",
                         "Disable authorization checks for the request."
+                )
+        );
+    }
+
+    private static List<DemoQuestion> sqlBasicsQuestions() {
+        return List.of(
+                question(
+                        "sql-basics-001",
+                        "Which SQL statement retrieves the `name` column from every row in the `users` table?",
+                        0,
+                        "`SELECT name FROM users;` requests the `name` column from all rows in the `users` table. A `SELECT` statement reads data without changing those rows.",
+                        "SELECT name FROM users;",
+                        "UPDATE users SET name;",
+                        "DELETE name FROM users;",
+                        "INSERT name INTO users;"
+                ),
+                question(
+                        "sql-basics-002",
+                        "Which SQL clause filters rows according to a condition?",
+                        1,
+                        "The `WHERE` clause keeps only rows that satisfy its condition. For example, `WHERE active = true` filters out inactive rows.",
+                        "ORDER BY",
+                        "WHERE",
+                        "GROUP BY",
+                        "SELECT"
+                ),
+                question(
+                        "sql-basics-003",
+                        "What does an `INNER JOIN` return?",
+                        2,
+                        "An `INNER JOIN` returns combined rows where the join condition matches in both tables. Rows without a match are excluded from the result.",
+                        "Every row from the first table, even without a match.",
+                        "Every possible combination of rows from both tables.",
+                        "Rows that satisfy the join condition in both tables.",
+                        "Only rows that contain null values."
+                ),
+                question(
+                        "sql-basics-004",
+                        "What is the main purpose of a primary key?",
+                        0,
+                        "A primary key uniquely identifies each row in a table and cannot be null. This gives other tables and queries a stable way to refer to a specific row.",
+                        "To uniquely identify each row in a table.",
+                        "To sort every query result automatically.",
+                        "To store the longest text value in a row.",
+                        "To allow duplicate identifiers in a table."
+                ),
+                question(
+                        "sql-basics-005",
+                        "What does a foreign key represent in a relational database?",
+                        1,
+                        "A foreign key references a key in another table, creating and protecting a relationship between rows. It helps prevent references to records that do not exist.",
+                        "A password used to connect to the database.",
+                        "A reference from one table to a key in another table.",
+                        "A temporary name for a selected column.",
+                        "A rule that makes every column unique."
+                ),
+                question(
+                        "sql-basics-006",
+                        "Why is `GROUP BY` commonly used with aggregate functions such as `COUNT`?",
+                        2,
+                        "`GROUP BY` divides rows into groups that share selected values, allowing an aggregate to be calculated for each group. For example, it can count quizzes in each category.",
+                        "To rename the result table permanently.",
+                        "To remove every duplicate row from storage.",
+                        "To calculate an aggregate separately for each group of rows.",
+                        "To prevent the query from returning columns."
+                ),
+                question(
+                        "sql-basics-007",
+                        "What is the purpose of `ORDER BY score DESC` in a query?",
+                        3,
+                        "`ORDER BY` sorts the result, and `DESC` requests descending order. Higher score values therefore appear before lower score values.",
+                        "To delete rows with duplicate scores.",
+                        "To group rows that have the same score.",
+                        "To return only rows with negative scores.",
+                        "To sort rows from the highest score to the lowest score."
+                ),
+                question(
+                        "sql-basics-008",
+                        "What is the purpose of rolling back a database transaction?",
+                        1,
+                        "A rollback cancels the uncommitted changes made in the current transaction. It helps preserve consistency when an operation cannot complete successfully.",
+                        "To make all transaction changes permanent.",
+                        "To cancel uncommitted changes in the transaction.",
+                        "To create a backup of the entire database.",
+                        "To grant every user administrator access."
+                )
+        );
+    }
+
+    private static List<DemoQuestion> networkingQuestions() {
+        return List.of(
+                question(
+                        "networking-001",
+                        "What is HTTP primarily used for?",
+                        0,
+                        "HTTP defines how clients and servers exchange web requests and responses. It is an application-layer protocol used by browsers, APIs, and other web clients.",
+                        "Exchanging web requests and responses between clients and servers.",
+                        "Assigning physical addresses to network cards.",
+                        "Compressing every file stored on a computer.",
+                        "Replacing the operating system's file system."
+                ),
+                question(
+                        "networking-002",
+                        "What is the main role of DNS?",
+                        1,
+                        "DNS resolves human-readable domain names to IP addresses and other DNS records. This lets users access services by name instead of remembering numeric addresses.",
+                        "To encrypt every packet sent over a network.",
+                        "To translate domain names into IP addresses.",
+                        "To assign application port numbers automatically.",
+                        "To store web page source code."
+                ),
+                question(
+                        "networking-003",
+                        "Which statement correctly compares TCP and UDP?",
+                        2,
+                        "TCP provides a connection-oriented byte stream with reliable, ordered delivery. UDP sends independent datagrams without guaranteeing delivery or order.",
+                        "UDP guarantees ordered delivery, while TCP does not.",
+                        "TCP and UDP always provide identical delivery guarantees.",
+                        "TCP provides reliable ordered delivery, while UDP does not guarantee it.",
+                        "TCP can only be used inside a local network."
+                ),
+                question(
+                        "networking-004",
+                        "What is an IP address used for in an IP network?",
+                        0,
+                        "An IP address identifies a network interface for addressing and routing packets. Routers use destination IP addresses to move packets toward the correct network.",
+                        "To identify a network interface so packets can be addressed and routed.",
+                        "To name a database column.",
+                        "To describe the format of an HTML document.",
+                        "To hash a user's password."
+                ),
+                question(
+                        "networking-005",
+                        "What does a network port number help identify?",
+                        1,
+                        "A port number helps direct traffic to a particular application or service on a host. An IP address identifies the host interface, while the port distinguishes services on it.",
+                        "The physical location of a computer building.",
+                        "A particular application or service on a host.",
+                        "The brand of the network cable.",
+                        "The username of the current user."
+                ),
+                question(
+                        "networking-006",
+                        "In the client-server model, what does a client typically do?",
+                        2,
+                        "A client initiates a request for data or a service, and a server processes the request and returns a response. A browser requesting a web page is a common example.",
+                        "It permanently replaces the server.",
+                        "It assigns all IP addresses on the internet.",
+                        "It sends requests to a server for data or services.",
+                        "It must store every server database locally."
+                ),
+                question(
+                        "networking-007",
+                        "What does HTTP status code 404 usually indicate?",
+                        3,
+                        "HTTP 404 means the server did not find the requested resource. It does not by itself mean the entire server is offline.",
+                        "The request succeeded and returned content.",
+                        "The client must switch to a different network protocol.",
+                        "The server created a new resource successfully.",
+                        "The requested resource was not found."
+                ),
+                question(
+                        "networking-008",
+                        "What does network latency measure?",
+                        0,
+                        "Latency measures the time delay involved in sending data across a network. Higher latency generally makes interactive requests feel slower.",
+                        "The delay before data reaches its destination or a response returns.",
+                        "The total storage capacity of a server disk.",
+                        "The number of user accounts in an application.",
+                        "The maximum length of a domain name."
+                )
+        );
+    }
+
+    private static List<DemoQuestion> softwareEngineeringQuestions() {
+        return List.of(
+                question(
+                        "software-engineering-001",
+                        "What is a software requirement?",
+                        1,
+                        "A requirement describes a needed capability, behavior, quality, or constraint of a system. Clear requirements help teams agree on what the software should achieve.",
+                        "A random implementation detail chosen after release.",
+                        "A documented need or constraint that the system should satisfy.",
+                        "A list of every variable name in the source code.",
+                        "A backup copy of the production database."
+                ),
+                question(
+                        "software-engineering-002",
+                        "What does a use case primarily describe?",
+                        2,
+                        "A use case describes how an actor interacts with a system to achieve a goal. It focuses on observable behavior rather than internal implementation details.",
+                        "The exact memory address of each object.",
+                        "The color palette used by an operating system.",
+                        "An interaction between an actor and the system to achieve a goal.",
+                        "A list of database passwords."
+                ),
+                question(
+                        "software-engineering-003",
+                        "Which practice is commonly associated with agile development?",
+                        0,
+                        "Agile approaches commonly deliver work in short iterations and use feedback to adapt priorities and implementation. This supports incremental learning and delivery.",
+                        "Delivering in short iterations and adapting based on feedback.",
+                        "Preventing stakeholders from reviewing work until the project ends.",
+                        "Avoiding all testing to increase delivery speed.",
+                        "Fixing every requirement permanently before any discussion."
+                ),
+                question(
+                        "software-engineering-004",
+                        "What is the main purpose of software testing?",
+                        1,
+                        "Testing evaluates whether software behaves as expected and helps reveal defects. Different test levels examine behavior at different scopes.",
+                        "To guarantee that software can never contain a defect.",
+                        "To evaluate behavior and detect defects before they affect users.",
+                        "To replace requirements and design activities completely.",
+                        "To make source code unavailable to developers."
+                ),
+                question(
+                        "software-engineering-005",
+                        "How does the waterfall model traditionally organize development work?",
+                        3,
+                        "The waterfall model traditionally moves through defined phases in sequence, such as requirements, design, implementation, and testing. Returning to earlier phases can be more formal and costly than in iterative approaches.",
+                        "As unrelated tasks with no planned order.",
+                        "As continuous deployment with no requirements phase.",
+                        "As daily releases driven only by production incidents.",
+                        "As a sequence of distinct phases completed largely in order."
+                ),
+                question(
+                        "software-engineering-006",
+                        "What is UML commonly used for?",
+                        0,
+                        "UML provides standardized diagram types for visualizing and communicating aspects of a software system. Examples include class, sequence, and use case diagrams.",
+                        "Modeling and communicating software structure and behavior with diagrams.",
+                        "Encrypting network traffic between services.",
+                        "Compiling source code into machine code.",
+                        "Managing user passwords in a database."
+                ),
+                question(
+                        "software-engineering-007",
+                        "What does software maintenance include after a system is released?",
+                        2,
+                        "Maintenance includes correcting defects, adapting to environmental changes, and improving the system after release. It is a normal part of the software lifecycle.",
+                        "Only deleting the source code after deployment.",
+                        "Only writing the first project requirements.",
+                        "Fixing defects, adapting the system, and making improvements.",
+                        "Preventing any future change to the application."
+                ),
+                question(
+                        "software-engineering-008",
+                        "What is a key benefit of version control?",
+                        1,
+                        "Version control records changes over time and supports collaboration, review, and recovery of earlier versions. It provides a shared history of the codebase.",
+                        "It removes the need to review any code change.",
+                        "It tracks changes and helps teams collaborate on source code.",
+                        "It guarantees that every committed change has no defects.",
+                        "It replaces all application tests."
+                )
+        );
+    }
+
+    private static List<DemoQuestion> englishForItQuestions() {
+        return List.of(
+                question(
+                        "english-it-001",
+                        "In software development, what does it mean to fix a bug?",
+                        0,
+                        "A bug is a defect or unintended behavior in software, and to fix it means to correct that problem. The fix should normally be verified with appropriate testing.",
+                        "To correct a defect in the software.",
+                        "To add the same defect to more files.",
+                        "To publish a database password.",
+                        "To remove every feature from the application."
+                ),
+                question(
+                        "english-it-002",
+                        "What does the verb `deploy` usually mean in a software project?",
+                        1,
+                        "To deploy means to release or install an application version into a target environment. That environment might be used for testing, staging, or production.",
+                        "To write a requirement without implementing it.",
+                        "To release or install an application in a target environment.",
+                        "To rename every variable in the source code.",
+                        "To disconnect all users permanently."
+                ),
+                question(
+                        "english-it-003",
+                        "In database terminology, what is a query?",
+                        2,
+                        "A query is a request or instruction used to read or manipulate data in a database. SQL is a common language for expressing relational database queries.",
+                        "A physical cable connecting two servers.",
+                        "A visual icon used to start an application.",
+                        "A request or instruction for working with database data.",
+                        "A password that is stored without hashing."
+                ),
+                question(
+                        "english-it-004",
+                        "What does an API endpoint refer to?",
+                        0,
+                        "An API endpoint is a specific address and operation through which a client interacts with an API. For HTTP APIs, it is commonly described by a path and an HTTP method.",
+                        "A specific API address and operation that a client can call.",
+                        "The final line of every source file.",
+                        "A backup battery inside a server.",
+                        "A private password shared by all users."
+                ),
+                question(
+                        "english-it-005",
+                        "What does the error message `Permission denied` usually mean?",
+                        1,
+                        "`Permission denied` means the current user or process is not allowed to perform the requested operation. The relevant permissions or identity should be checked.",
+                        "The operation completed successfully.",
+                        "The current user or process lacks the required permission.",
+                        "The database contains no tables.",
+                        "The network connection is always too slow."
+                ),
+                question(
+                        "english-it-006",
+                        "What does it mean to refactor code?",
+                        3,
+                        "Refactoring improves the internal structure of code while preserving its intended external behavior. It can make code clearer, simpler, or easier to maintain.",
+                        "To change every public behavior without reviewing it.",
+                        "To delete all tests before editing code.",
+                        "To copy a defect into another module.",
+                        "To improve internal code structure without changing intended behavior."
                 )
         );
     }

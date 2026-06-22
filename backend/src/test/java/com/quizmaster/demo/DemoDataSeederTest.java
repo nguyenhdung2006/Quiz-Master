@@ -134,20 +134,53 @@ class DemoDataSeederTest {
 
         assertThat(usersByEmail).hasSize(3);
         assertThat(categoriesBySlug).hasSize(6);
-        assertThat(quizzesByTitleAndCategory).hasSize(4);
-        assertThat(savedQuestions).hasSize(19);
-        assertThat(savedOptionBatches).hasSize(19);
+        assertThat(quizzesByTitleAndCategory).hasSize(8);
+        assertThat(savedQuestions).hasSize(49);
+        assertThat(savedOptionBatches).hasSize(49);
+        assertThat(savedOptionBatches.stream().mapToInt(List::size).sum()).isEqualTo(196);
 
         Quiz javaCoreBasics = findQuiz(quizzesByTitleAndCategory, "Java Core Basics");
         Quiz springBootEssentials = findQuiz(quizzesByTitleAndCategory, "Spring Boot Essentials");
+        Quiz sqlBasics = findQuiz(quizzesByTitleAndCategory, "SQL Basics");
+        Quiz networkingFundamentals = findQuiz(quizzesByTitleAndCategory, "Networking Fundamentals");
+        Quiz softwareEngineeringBasics = findQuiz(
+                quizzesByTitleAndCategory,
+                "Software Engineering Basics"
+        );
+        Quiz englishForItBasics = findQuiz(quizzesByTitleAndCategory, "English for IT Basics");
         Quiz practiceDraft = findQuiz(quizzesByTitleAndCategory, "Draft — Spring Security Practice");
         Quiz emptyDraft = findQuiz(
                 quizzesByTitleAndCategory,
                 "Draft — Empty Quiz For Publish Validation"
         );
 
-        assertThat(javaCoreBasics.isPublished()).isTrue();
-        assertThat(springBootEssentials.isPublished()).isTrue();
+        assertPublicQuiz(javaCoreBasics, "java-core", 10, 8, savedQuestions, savedOptionBatches);
+        assertPublicQuiz(springBootEssentials, "spring-boot", 10, 8, savedQuestions, savedOptionBatches);
+        assertPublicQuiz(sqlBasics, "sql-database", 10, 8, savedQuestions, savedOptionBatches);
+        assertPublicQuiz(
+                networkingFundamentals,
+                "computer-networking",
+                10,
+                8,
+                savedQuestions,
+                savedOptionBatches
+        );
+        assertPublicQuiz(
+                softwareEngineeringBasics,
+                "software-engineering",
+                10,
+                8,
+                savedQuestions,
+                savedOptionBatches
+        );
+        assertPublicQuiz(
+                englishForItBasics,
+                "english-for-it",
+                8,
+                6,
+                savedQuestions,
+                savedOptionBatches
+        );
         assertThat(practiceDraft.isPublished()).isFalse();
         assertThat(practiceDraft.getCategory().getSlug()).isEqualTo("spring-boot");
         assertThat(emptyDraft.isPublished()).isFalse();
@@ -174,9 +207,9 @@ class DemoDataSeederTest {
         verify(userRepository, times(3)).save(any(User.class));
         verify(passwordEncoder, times(3)).encode("password123");
         verify(categoryRepository, times(6)).save(any(Category.class));
-        verify(quizRepository, times(4)).save(any(Quiz.class));
-        verify(questionRepository, times(19)).save(any(Question.class));
-        verify(optionRepository, times(19)).saveAll(anyList());
+        verify(quizRepository, times(8)).save(any(Quiz.class));
+        verify(questionRepository, times(49)).save(any(Question.class));
+        verify(optionRepository, times(49)).saveAll(anyList());
     }
 
     @Test
@@ -211,5 +244,33 @@ class DemoDataSeederTest {
                 .filter(quiz -> quiz.getTitle().equals(title))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    private void assertPublicQuiz(
+            Quiz quiz,
+            String categorySlug,
+            int timeLimitMinutes,
+            int expectedQuestionCount,
+            List<Question> savedQuestions,
+            List<List<Option>> savedOptionBatches
+    ) {
+        assertThat(quiz.isPublished()).isTrue();
+        assertThat(quiz.getCategory().getSlug()).isEqualTo(categorySlug);
+        assertThat(quiz.getTimeLimitMinutes()).isEqualTo(timeLimitMinutes);
+
+        List<Question> quizQuestions = savedQuestions.stream()
+                .filter(question -> question.getQuiz() == quiz)
+                .toList();
+        assertThat(quizQuestions).hasSize(expectedQuestionCount);
+        assertThat(quizQuestions).allMatch(question -> !question.getExplanation().isBlank());
+
+        List<List<Option>> quizOptions = savedOptionBatches.stream()
+                .filter(options -> options.getFirst().getQuestion().getQuiz() == quiz)
+                .toList();
+        assertThat(quizOptions).hasSize(expectedQuestionCount);
+        assertThat(quizOptions).allSatisfy(options -> {
+            assertThat(options).hasSize(4);
+            assertThat(options).filteredOn(Option::getCorrect).hasSize(1);
+        });
     }
 }

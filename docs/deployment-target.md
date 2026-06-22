@@ -34,7 +34,7 @@ Thông tin provider được đối chiếu với tài liệu chính thức ngà
 - Local `main` đang ahead `origin/main` 21 commit.
 - Backend dùng Spring Boot 3.5.15 và Java 25.
 - Frontend dùng React, Vite 6.4.3 và `BrowserRouter`.
-- PostgreSQL staging/production chưa được provision.
+- Neon PostgreSQL staging đã được provision thủ công trong Phase 8.4; production database chưa được tạo.
 - Phase 8.0 đã xác nhận backend tests/package và frontend build đều pass.
 
 ## Decision Summary
@@ -218,7 +218,7 @@ Các giá trị dưới đây chỉ là placeholder, chưa tồn tại và chưa
 ```text
 Frontend staging URL: https://quizmaster-<placeholder>.vercel.app
 Backend staging URL: https://quizmaster-api-<placeholder>.onrender.com
-Database: Neon PostgreSQL project/database URL to be created in Phase 8.4
+Database: Neon PostgreSQL staging project `quizmaster-staging` (connection details remain secret/placeholders)
 ```
 
 Không invent tên deployment thật và không dùng placeholder làm CORS/env production trước khi platform cấp URL thực tế.
@@ -279,7 +279,7 @@ Credentials: stored only in Render environment variables
 Pooling: evaluate pooled versus direct URL for Hibernate/JPA
 ```
 
-Không tạo project, import local data hoặc seed trong Phase 8.1.
+Phase 8.4 đã provision Neon staging và dùng direct connection cho initial schema/local smoke. Không import local data hoặc seed. Pooled connection vẫn cần đánh giá sau.
 
 ## Environment Variables by Platform
 
@@ -347,7 +347,7 @@ Never commit the Neon connection string.
 6. Render không có native Java; Java 25 được pin qua `backend/Dockerfile`, nhưng Phase 8.3 vẫn không thể build image vì local Docker Linux daemon không hoạt động. Temurin 25 tags và container fail-fast remain NOT VERIFIED by an actual image build.
 7. Frontend đã có Vercel SPA rewrite nhưng chưa được smoke test trên URL staging thật.
 8. Node version chưa được pin; local build dùng Node 24.15.0 và Vercel runtime cần được chốt trước staging.
-9. Neon PostgreSQL staging chưa được provision; JDBC/TLS/pooling chưa được smoke test.
+9. Neon PostgreSQL staging đã provision; local direct JDBC/TLS smoke pass với PostgreSQL 18.4, nhưng Render network path, pooling và channel binding chưa được test.
 10. Local Git chưa push 21 commit tại đầu Phase; provider chưa thể thấy code mới.
 11. Chưa có staging deployment hoặc staging smoke test.
 12. Seeder chưa có hard guard cấm profile production.
@@ -360,8 +360,8 @@ Never commit the Neon connection string.
 4. Build and verify `backend/Dockerfile` with an available Docker daemon and confirm the Temurin 25 tags.
 5. Verify Vercel SPA fallback on every important deep route after deployment.
 6. Confirm Vercel Node runtime, then pin it only if the selected supported version matches local/dependency requirements.
-7. Provision Neon PostgreSQL staging database in Singapore.
-8. Convert/verify Neon connection details as pgJDBC URL with required TLS.
+7. Verify the provisioned Neon staging database from Render and review backup/free-tier limits.
+8. Establish versioned migrations and return staging/production to controlled `validate` behavior.
 9. Set backend/frontend env vars without exposing secrets.
 10. Push GitHub only after user approval.
 11. Run staging smoke tests, including cold-start behavior and deep-route refresh.
@@ -381,14 +381,14 @@ Never commit the Neon connection string.
 
 ## Recommended Next Steps
 
-Backend hardening, frontend Vercel config và backend runtime verification đã được thực hiện trong Phase 8.2A/8.2B/8.3. Bước tiếp theo nên là:
+Backend hardening, frontend Vercel config, backend runtime verification và Neon staging preparation đã được thực hiện qua Phase 8.4. Bước tiếp theo nên là:
 
 ```text
-Phase 8.4 PostgreSQL Staging Database Preparation
+Phase 8.5 Frontend Production Config / Frontend Production Deploy Readiness Verification
 Dùng: 5.5 High
 ```
 
-Phase 8.4 sẽ provision Neon staging, xác minh JDBC/TLS và quyết định migration/DDL strategy. Docker image vẫn cần build lại khi Docker daemon hoạt động hoặc khi Render performs the first controlled build.
+Phase 8.5 nên verify lại Vercel root/build/output/env/SPA config đã tạo ở Phase 8.2B và chỉ sửa nếu có gap. Docker image và Render-to-Neon connection vẫn cần verification ở lần controlled staging deploy.
 
 Tạo platform services, push và smoke test vẫn cần approval ở các phase riêng.
 
@@ -426,4 +426,4 @@ Database: Neon PostgreSQL (AWS Singapore)
 
 QuizMaster will target a staging deployment first. QuizMaster is still not production-ready. Production readiness requires Phase 8.2–8.9 config hardening, Docker/runtime work, database provisioning, actual deployments and smoke tests.
 
-The next phase should prepare Neon PostgreSQL staging and the migration/DDL decision before any real deployment.
+The next phase should verify frontend production deployment readiness before controlled staging deployment work.

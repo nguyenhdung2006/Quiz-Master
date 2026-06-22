@@ -98,6 +98,10 @@ Render uses a Docker Web Service with repository root directory `backend` and Do
 local verification and first-deploy checks are documented in
 [`docs/deployment-backend.md`](docs/deployment-backend.md).
 
+Neon staging database contract, SSL/JDBC format, empty-data policy and DDL limitations are documented in
+[`docs/deployment-database.md`](docs/deployment-database.md). The repository contains placeholders only;
+database credentials must remain outside Git.
+
 Run tests:
 
 ```powershell

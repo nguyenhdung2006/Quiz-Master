@@ -4,7 +4,7 @@
 
 Target: Render Web Service in Singapore, connected to Neon PostgreSQL in AWS Singapore. The first target is staging, not production.
 
-No Render service or Neon database is created by this document.
+No Render service or database is created by this document. Neon staging was provisioned manually in Phase 8.4; production database has not been created.
 
 ## Render Service Type
 
@@ -114,13 +114,19 @@ Phase 8.3 does not add a migration tool.
 
 All three Spring datasource variables are mandatory in the production profile and have no localhost/default credential fallback. Neon must provide a JDBC PostgreSQL URL compatible with pgJDBC and required TLS parameters.
 
-Before first deploy:
+Prepared in Phase 8.4:
 
-- create a staging-only Neon project/database in Singapore;
-- decide pooled versus direct connection for Hibernate/Hikari;
-- confirm TLS parameters in the JDBC URL;
+- staging-only Neon project/database in Singapore;
+- direct connection for initial Hibernate schema setup;
+- JDBC `sslmode=require` contract;
+- successful local prod-profile connection and `GET /api/categories` returning `[]` against empty staging data.
+
+Still required before/after first deploy:
+
+- test pooled versus direct connection for Hibernate/Hikari;
+- verify Render-to-Neon TLS/network behavior;
 - keep credentials only in Render environment variables;
-- test schema creation/validation on disposable staging data.
+- review the schema created by temporary `ddl-auto=update` and establish migrations.
 
 ## PORT Behavior
 
@@ -194,7 +200,7 @@ Expected result: non-zero exit because datasource variables are absent, with no 
 
 - Docker build and Java 25 image tags are not verified locally because Docker Desktop's Linux engine is unavailable.
 - Container non-root user is deferred until an image can be built and tested.
-- Neon has not been provisioned and no real JDBC/TLS connection has been tested.
+- Neon staging has been provisioned and local direct JDBC/TLS smoke passed, but Render-to-Neon and pooled connections are unverified.
 - No Flyway/Liquibase migrations or rollback plan exist.
 - No actuator health endpoint exists.
 - Render/Vercel deployments and staging smoke tests have not run.
@@ -203,8 +209,8 @@ Expected result: non-zero exit because datasource variables are absent, with no 
 
 ## Before First Render Deploy
 
-1. Provision disposable Neon staging in Singapore and confirm JDBC/TLS details.
-2. Choose temporary staging DDL behavior and document the migration follow-up.
+1. Reuse only the prepared Neon staging project and place its values in Render environment storage without exposing them.
+2. Confirm whether the first Render run still needs temporary staging `update`, then plan migration-controlled `validate`.
 3. Set every required Render variable using real staging URLs/secrets.
 4. Confirm `backend/Dockerfile` builds on an available Docker daemon or controlled Render build.
 5. Keep auto-deploy disabled for the first attempt.

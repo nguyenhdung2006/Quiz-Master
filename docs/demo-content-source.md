@@ -357,7 +357,82 @@ Correct answers and explanations are included because this is an internal conten
 
 **Explanation:** The backend must validate the token's integrity and relevant claims before establishing authentication for the request. A token should not be trusted merely because it has the expected text fields.
 
-## 7. Placeholder Outlines for Remaining Quizzes
+## 7. Admin Demo Quizzes
+
+### Draft — Spring Security Practice
+
+**Category:** Spring Boot
+**Status:** Draft / Unpublished
+**Purpose:** Allow an admin to demonstrate editing quiz metadata, questions, and options before publishing.
+**Question count:** 3
+
+#### Question 1
+
+**Key:** `spring-security-draft-001`
+**Topic:** Authentication vs authorization
+**Difficulty:** easy
+
+**Question:** Which statement correctly distinguishes authentication from authorization?
+
+**Options:**
+
+- A. Authentication verifies identity, while authorization checks permitted actions.
+- B. Authentication checks permitted actions, while authorization verifies identity.
+- C. Authentication encrypts the database, while authorization creates user accounts.
+- D. Authentication and authorization always mean exactly the same thing.
+
+**Correct answer:** A
+
+**Explanation:** Authentication verifies who a user is, while authorization determines what an authenticated user is allowed to do. Applications commonly perform authentication before applying authorization rules.
+
+#### Question 2
+
+**Key:** `spring-security-draft-002`
+**Topic:** JWT purpose in stateless APIs
+**Difficulty:** easy
+
+**Question:** What is a common purpose of a JWT in a stateless API after a user logs in?
+
+**Options:**
+
+- A. To store the user's plaintext password in each request.
+- B. To carry signed claims that the backend can validate on later requests.
+- C. To make every endpoint public automatically.
+- D. To replace all database tables used by the application.
+
+**Correct answer:** B
+
+**Explanation:** A JWT can carry signed claims that the backend validates on later requests without relying on a server-side login session. The backend must still verify the token before trusting those claims.
+
+#### Question 3
+
+**Key:** `spring-security-draft-003`
+**Topic:** Password hashing
+**Difficulty:** easy
+
+**Question:** Why should an application store password hashes instead of plaintext passwords?
+
+**Options:**
+
+- A. It avoids storing the original password and reduces exposure if credentials are leaked.
+- B. It allows administrators to read every user's password more easily.
+- C. It removes the need to authenticate users.
+- D. It guarantees that every user chooses a unique password.
+
+**Correct answer:** A
+
+**Explanation:** Password hashing lets the application verify a submitted password without storing the original password. A strong adaptive password hash also reduces the impact of a credential database exposure.
+
+### Draft — Empty Quiz For Publish Validation
+
+**Category:** Java Core
+**Status:** Draft / Unpublished
+**Purpose:** Allow an admin to demonstrate that the existing publish validation blocks an empty quiz.
+**Question count:** 0
+
+This quiz intentionally has no questions or options. It must remain unpublished until valid question content is added through the normal admin workflow.
+
+## 8. Placeholder Outlines for Remaining Quizzes
 
 These quizzes are intentionally outlines only in Phase 6.1. Their full question sets must be reviewed in a later content phase before seeding.
 
@@ -385,10 +460,12 @@ These quizzes are intentionally outlines only in Phase 6.1. Their full question 
 - **Planned focus:** Common technical vocabulary, issue descriptions, documentation language, and routine team communication.
 - **Target:** 6-10 beginner/intermediate single-choice questions.
 
-## 8. Review Checklist
+## 9. Review Checklist
 
 - [x] Java Core Basics has exactly 8 questions.
 - [x] Spring Boot Essentials has exactly 8 questions.
+- [x] Draft — Spring Security Practice has exactly 3 questions and is unpublished.
+- [x] Draft — Empty Quiz For Publish Validation has 0 questions and is unpublished.
 - [x] Every question has exactly 4 options.
 - [x] Every question declares exactly 1 correct answer.
 - [x] Every question has a 1-3 sentence explanation.
@@ -399,7 +476,7 @@ These quizzes are intentionally outlines only in Phase 6.1. Their full question 
 - [x] No public API behavior is changed by this document.
 - [x] The completed content is ready for seeder implementation review.
 
-## 9. Notes for the Future Seeder
+## 10. Notes for the Future Seeder
 
 - Preserve each question key as a stable content identifier or lookup key.
 - Preserve quiz metadata exactly unless a later content review explicitly changes it.

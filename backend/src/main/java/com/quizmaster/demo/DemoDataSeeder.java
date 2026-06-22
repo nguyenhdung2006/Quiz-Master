@@ -118,7 +118,7 @@ public class DemoDataSeeder implements CommandLineRunner {
         quiz.setTitle(demoQuiz.title());
         quiz.setDescription(demoQuiz.description());
         quiz.setTimeLimitMinutes(demoQuiz.timeLimitMinutes());
-        quiz.setPublished(true);
+        quiz.setPublished(demoQuiz.published());
         Quiz savedQuiz = quizRepository.save(quiz);
 
         for (int questionIndex = 0; questionIndex < demoQuiz.questions().size(); questionIndex++) {
@@ -162,10 +162,6 @@ public class DemoDataSeeder implements CommandLineRunner {
     }
 
     private void validateQuiz(DemoQuiz quiz) {
-        if (quiz.questions().size() != 8) {
-            throw new IllegalStateException("Demo quiz must have exactly 8 questions: " + quiz.title());
-        }
-
         for (DemoQuestion question : quiz.questions()) {
             if (question.options().size() != 4) {
                 throw new IllegalStateException("Demo question must have exactly 4 options: " + question.key());
@@ -197,6 +193,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                         "java-core",
                         "Review essential Java runtime, type system, object-oriented, exception, collection, and String concepts.",
                         10,
+                        true,
                         javaCoreQuestions()
                 ),
                 new DemoQuiz(
@@ -204,7 +201,24 @@ public class DemoDataSeeder implements CommandLineRunner {
                         "spring-boot",
                         "Review common Spring Boot application structure, REST, validation, persistence, and security concepts.",
                         10,
+                        true,
                         springBootQuestions()
+                ),
+                new DemoQuiz(
+                        "Draft — Spring Security Practice",
+                        "spring-boot",
+                        "Practice basic authentication, authorization, JWT, and password storage concepts before publishing.",
+                        10,
+                        false,
+                        springSecurityPracticeQuestions()
+                ),
+                new DemoQuiz(
+                        "Draft — Empty Quiz For Publish Validation",
+                        "java-core",
+                        "An empty draft for demonstrating publish validation in the admin workflow.",
+                        10,
+                        false,
+                        List.of()
                 )
         );
     }
@@ -379,6 +393,41 @@ public class DemoDataSeeder implements CommandLineRunner {
         );
     }
 
+    private static List<DemoQuestion> springSecurityPracticeQuestions() {
+        return List.of(
+                question(
+                        "spring-security-draft-001",
+                        "Which statement correctly distinguishes authentication from authorization?",
+                        0,
+                        "Authentication verifies who a user is, while authorization determines what an authenticated user is allowed to do. Applications commonly perform authentication before applying authorization rules.",
+                        "Authentication verifies identity, while authorization checks permitted actions.",
+                        "Authentication checks permitted actions, while authorization verifies identity.",
+                        "Authentication encrypts the database, while authorization creates user accounts.",
+                        "Authentication and authorization always mean exactly the same thing."
+                ),
+                question(
+                        "spring-security-draft-002",
+                        "What is a common purpose of a JWT in a stateless API after a user logs in?",
+                        1,
+                        "A JWT can carry signed claims that the backend validates on later requests without relying on a server-side login session. The backend must still verify the token before trusting those claims.",
+                        "To store the user's plaintext password in each request.",
+                        "To carry signed claims that the backend can validate on later requests.",
+                        "To make every endpoint public automatically.",
+                        "To replace all database tables used by the application."
+                ),
+                question(
+                        "spring-security-draft-003",
+                        "Why should an application store password hashes instead of plaintext passwords?",
+                        0,
+                        "Password hashing lets the application verify a submitted password without storing the original password. A strong adaptive password hash also reduces the impact of a credential database exposure.",
+                        "It avoids storing the original password and reduces exposure if credentials are leaked.",
+                        "It allows administrators to read every user's password more easily.",
+                        "It removes the need to authenticate users.",
+                        "It guarantees that every user chooses a unique password."
+                )
+        );
+    }
+
     private static DemoQuestion question(
             String key,
             String content,
@@ -397,6 +446,7 @@ public class DemoDataSeeder implements CommandLineRunner {
             String categorySlug,
             String description,
             int timeLimitMinutes,
+            boolean published,
             List<DemoQuestion> questions
     ) {
     }

@@ -10,7 +10,10 @@ import com.quizmaster.quiz.Quiz;
 import com.quizmaster.quiz.QuizRepository;
 import com.quizmaster.user.User;
 import com.quizmaster.user.UserRepository;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +30,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -76,25 +80,45 @@ class DemoDataSeederTest {
     }
 
     @Test
-    void seedsExpectedDemoData() {
+    void seedsExpectedDemoDataAndDoesNotDuplicateOnSecondRun() {
         AtomicLong ids = new AtomicLong(1);
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        Map<String, User> usersByEmail = new HashMap<>();
+        Map<String, Category> categoriesBySlug = new HashMap<>();
+        Map<String, Quiz> quizzesByTitleAndCategory = new HashMap<>();
+        List<Question> savedQuestions = new ArrayList<>();
+        List<List<Option>> savedOptionBatches = new ArrayList<>();
+
+        when(userRepository.findByEmail(anyString())).thenAnswer(invocation ->
+                Optional.ofNullable(usersByEmail.get(invocation.getArgument(0))));
         when(passwordEncoder.encode("password123")).thenReturn("hashed-demo-password");
-        when(categoryRepository.findBySlug(anyString())).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId(ids.getAndIncrement());
+            usersByEmail.put(user.getEmail(), user);
+            return user;
+        });
+        when(categoryRepository.findBySlug(anyString())).thenAnswer(invocation ->
+                Optional.ofNullable(categoriesBySlug.get(invocation.getArgument(0))));
         when(categoryRepository.save(any(Category.class))).thenAnswer(invocation -> {
             Category category = invocation.getArgument(0);
             category.setId(ids.getAndIncrement());
+            categoriesBySlug.put(category.getSlug(), category);
             return category;
         });
-        when(quizRepository.findByTitleAndCategoryId(anyString(), anyLong())).thenReturn(Optional.empty());
+        when(quizRepository.findByTitleAndCategoryId(anyString(), anyLong())).thenAnswer(invocation ->
+                Optional.ofNullable(quizzesByTitleAndCategory.get(
+                        invocation.getArgument(0) + "|" + invocation.getArgument(1)
+                )));
         when(quizRepository.save(any(Quiz.class))).thenAnswer(invocation -> {
             Quiz quiz = invocation.getArgument(0);
             quiz.setId(ids.getAndIncrement());
+            quizzesByTitleAndCategory.put(quiz.getTitle() + "|" + quiz.getCategory().getId(), quiz);
             return quiz;
         });
         when(questionRepository.save(any(Question.class))).thenAnswer(invocation -> {
             Question question = invocation.getArgument(0);
             question.setId(ids.getAndIncrement());
+            savedQuestions.add(question);
             return question;
         });
         when(optionRepository.saveAll(anyList())).thenAnswer(invocation -> {
@@ -102,17 +126,57 @@ class DemoDataSeederTest {
             assertThat(options).hasSize(4);
             assertThat(options).extracting(Option::getDisplayOrder).containsExactly(1, 2, 3, 4);
             assertThat(options).filteredOn(Option::getCorrect).hasSize(1);
+            savedOptionBatches.add(options);
             return options;
         });
 
         seeder.run();
 
-        verify(userRepository, org.mockito.Mockito.times(3)).save(any(User.class));
-        verify(passwordEncoder, org.mockito.Mockito.times(3)).encode("password123");
-        verify(categoryRepository, org.mockito.Mockito.times(6)).save(any(Category.class));
-        verify(quizRepository, org.mockito.Mockito.times(2)).save(any(Quiz.class));
-        verify(questionRepository, org.mockito.Mockito.times(16)).save(any(Question.class));
-        verify(optionRepository, org.mockito.Mockito.times(16)).saveAll(anyList());
+        assertThat(usersByEmail).hasSize(3);
+        assertThat(categoriesBySlug).hasSize(6);
+        assertThat(quizzesByTitleAndCategory).hasSize(4);
+        assertThat(savedQuestions).hasSize(19);
+        assertThat(savedOptionBatches).hasSize(19);
+
+        Quiz javaCoreBasics = findQuiz(quizzesByTitleAndCategory, "Java Core Basics");
+        Quiz springBootEssentials = findQuiz(quizzesByTitleAndCategory, "Spring Boot Essentials");
+        Quiz practiceDraft = findQuiz(quizzesByTitleAndCategory, "Draft — Spring Security Practice");
+        Quiz emptyDraft = findQuiz(
+                quizzesByTitleAndCategory,
+                "Draft — Empty Quiz For Publish Validation"
+        );
+
+        assertThat(javaCoreBasics.isPublished()).isTrue();
+        assertThat(springBootEssentials.isPublished()).isTrue();
+        assertThat(practiceDraft.isPublished()).isFalse();
+        assertThat(practiceDraft.getCategory().getSlug()).isEqualTo("spring-boot");
+        assertThat(emptyDraft.isPublished()).isFalse();
+        assertThat(emptyDraft.getCategory().getSlug()).isEqualTo("java-core");
+
+        List<Question> practiceQuestions = savedQuestions.stream()
+                .filter(question -> question.getQuiz() == practiceDraft)
+                .toList();
+        assertThat(practiceQuestions).hasSize(3);
+        assertThat(practiceQuestions).allMatch(question -> !question.getExplanation().isBlank());
+        assertThat(savedQuestions).noneMatch(question -> question.getQuiz() == emptyDraft);
+
+        List<List<Option>> practiceOptions = savedOptionBatches.stream()
+                .filter(options -> options.getFirst().getQuestion().getQuiz() == practiceDraft)
+                .toList();
+        assertThat(practiceOptions).hasSize(3);
+        assertThat(practiceOptions).allSatisfy(options -> {
+            assertThat(options).hasSize(4);
+            assertThat(options).filteredOn(Option::getCorrect).hasSize(1);
+        });
+
+        seeder.run();
+
+        verify(userRepository, times(3)).save(any(User.class));
+        verify(passwordEncoder, times(3)).encode("password123");
+        verify(categoryRepository, times(6)).save(any(Category.class));
+        verify(quizRepository, times(4)).save(any(Quiz.class));
+        verify(questionRepository, times(19)).save(any(Question.class));
+        verify(optionRepository, times(19)).saveAll(anyList());
     }
 
     @Test
@@ -140,5 +204,12 @@ class DemoDataSeederTest {
         verify(quizRepository, never()).save(any(Quiz.class));
         verify(questionRepository, never()).save(any(Question.class));
         verify(optionRepository, never()).saveAll(anyList());
+    }
+
+    private Quiz findQuiz(Map<String, Quiz> quizzesByTitleAndCategory, String title) {
+        return quizzesByTitleAndCategory.values().stream()
+                .filter(quiz -> quiz.getTitle().equals(title))
+                .findFirst()
+                .orElseThrow();
     }
 }

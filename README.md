@@ -48,3 +48,16 @@ cd D:\QuizMaster\backend
 ```
 
 Current API summary is documented in `docs/backend-api.md`.
+
+## Demo data
+
+QuizMaster includes an explicit local/demo seed flow for curated accounts, categories, quizzes, questions, explanations, attempts, and a locked quiz example. The seed does not run by default.
+
+Start the backend with demo seed enabled:
+
+```powershell
+cd D:\QuizMaster\backend
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--app.seed-demo=true"
+```
+
+See [the demo data runbook](docs/demo-runbook.md) for safety notes, expected data, demo accounts, QA checks, and reset guidance.

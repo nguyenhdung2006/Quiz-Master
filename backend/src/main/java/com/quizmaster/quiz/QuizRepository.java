@@ -14,6 +14,8 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
     List<Quiz> findByCategoryIdAndPublishedTrue(Long categoryId);
 
+    Optional<Quiz> findByTitleAndCategoryId(String title, Long categoryId);
+
     boolean existsByCategoryId(Long categoryId);
 
     long countByCategoryId(Long categoryId);

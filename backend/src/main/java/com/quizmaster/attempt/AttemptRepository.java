@@ -13,4 +13,6 @@ public interface AttemptRepository extends JpaRepository<Attempt, Long> {
     boolean existsByQuizId(Long quizId);
 
     boolean existsByQuizIdAndSubmittedAtIsNotNull(Long quizId);
+
+    boolean existsByUserIdAndQuizIdAndSubmittedAtIsNotNull(Long userId, Long quizId);
 }

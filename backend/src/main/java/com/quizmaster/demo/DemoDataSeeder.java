@@ -1,5 +1,11 @@
 package com.quizmaster.demo;
 
+import com.quizmaster.attempt.AttemptRepository;
+import com.quizmaster.attempt.AttemptService;
+import com.quizmaster.attempt.StartAttemptRequest;
+import com.quizmaster.attempt.StartAttemptResponse;
+import com.quizmaster.attempt.SubmitAnswerRequest;
+import com.quizmaster.attempt.SubmitAttemptRequest;
 import com.quizmaster.category.Category;
 import com.quizmaster.category.CategoryRepository;
 import com.quizmaster.quiz.Option;
@@ -30,6 +36,9 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DemoDataSeeder.class);
     private static final String DEMO_PASSWORD = "password123";
+    private static final String DEMO_USER_EMAIL = "demo-user@quizmaster.local";
+    private static final String JAVA_CORE_QUIZ_TITLE = "Java Core Basics";
+    private static final String LOCKED_QUIZ_TITLE = "Locked Demo Quiz";
 
     private static final List<DemoUser> USERS = List.of(
             new DemoUser("demo-admin@quizmaster.local", UserRole.ADMIN),
@@ -45,6 +54,8 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final QuizRepository quizRepository;
     private final QuestionRepository questionRepository;
     private final OptionRepository optionRepository;
+    private final AttemptRepository attemptRepository;
+    private final AttemptService attemptService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -54,7 +65,8 @@ public class DemoDataSeeder implements CommandLineRunner {
 
         seedUsers();
         Map<String, Category> categoriesBySlug = seedCategories();
-        seedQuizzes(categoriesBySlug);
+        Map<String, Quiz> quizzesByTitle = seedQuizzes(categoriesBySlug);
+        seedAttempts(quizzesByTitle);
 
         LOGGER.info("Demo data seed completed");
     }
@@ -95,24 +107,27 @@ public class DemoDataSeeder implements CommandLineRunner {
         return savedCategory;
     }
 
-    private void seedQuizzes(Map<String, Category> categoriesBySlug) {
+    private Map<String, Quiz> seedQuizzes(Map<String, Category> categoriesBySlug) {
+        Map<String, Quiz> quizzesByTitle = new LinkedHashMap<>();
+
         for (DemoQuiz demoQuiz : QUIZZES) {
             Category category = categoriesBySlug.get(demoQuiz.categorySlug());
             if (category == null) {
                 throw new IllegalStateException("Missing demo category: " + demoQuiz.categorySlug());
             }
 
-            if (quizRepository.findByTitleAndCategoryId(demoQuiz.title(), category.getId()).isPresent()) {
-                LOGGER.info("Demo quiz already exists; skipping content for {}", demoQuiz.title());
-                continue;
-            }
-
-            validateQuiz(demoQuiz);
-            createQuiz(demoQuiz, category);
+            Quiz quiz = quizRepository.findByTitleAndCategoryId(demoQuiz.title(), category.getId())
+                    .orElseGet(() -> {
+                        validateQuiz(demoQuiz);
+                        return createQuiz(demoQuiz, category);
+                    });
+            quizzesByTitle.put(demoQuiz.title(), quiz);
         }
+
+        return quizzesByTitle;
     }
 
-    private void createQuiz(DemoQuiz demoQuiz, Category category) {
+    private Quiz createQuiz(DemoQuiz demoQuiz, Category category) {
         Quiz quiz = new Quiz();
         quiz.setCategory(category);
         quiz.setTitle(demoQuiz.title());
@@ -126,6 +141,84 @@ public class DemoDataSeeder implements CommandLineRunner {
         }
 
         LOGGER.info("Created demo quiz {} with {} questions", demoQuiz.title(), demoQuiz.questions().size());
+        return savedQuiz;
+    }
+
+    private void seedAttempts(Map<String, Quiz> quizzesByTitle) {
+        User demoUser = userRepository.findByEmail(DEMO_USER_EMAIL)
+                .orElseThrow(() -> new IllegalStateException("Missing demo user: " + DEMO_USER_EMAIL));
+
+        seedSubmittedAttempt(demoUser, requireQuiz(quizzesByTitle, JAVA_CORE_QUIZ_TITLE), 1);
+        Quiz lockedQuiz = requireQuiz(quizzesByTitle, LOCKED_QUIZ_TITLE);
+        seedSubmittedAttempt(demoUser, lockedQuiz, 2);
+        if (lockedQuiz.isPublished()) {
+            lockedQuiz.setPublished(false);
+            quizRepository.saveAndFlush(lockedQuiz);
+        }
+    }
+
+    private Quiz requireQuiz(Map<String, Quiz> quizzesByTitle, String title) {
+        Quiz quiz = quizzesByTitle.get(title);
+        if (quiz == null) {
+            throw new IllegalStateException("Missing demo quiz: " + title);
+        }
+        return quiz;
+    }
+
+    private void seedSubmittedAttempt(User user, Quiz quiz, int incorrectAnswerCount) {
+        if (attemptRepository.existsByUserIdAndQuizIdAndSubmittedAtIsNotNull(user.getId(), quiz.getId())) {
+            LOGGER.info("Submitted demo attempt already exists; skipping {}", quiz.getTitle());
+            return;
+        }
+
+        boolean restoreDraftStatus = !quiz.isPublished();
+        if (restoreDraftStatus) {
+            quiz.setPublished(true);
+            quizRepository.saveAndFlush(quiz);
+        }
+
+        try {
+            StartAttemptResponse startedAttempt = attemptService.startAttempt(
+                    new StartAttemptRequest(quiz.getId()),
+                    user.getEmail()
+            );
+            SubmitAttemptRequest submission = buildSubmission(quiz, incorrectAnswerCount);
+            attemptService.submitAttempt(startedAttempt.attemptId(), submission, user.getEmail());
+            LOGGER.info("Created submitted demo attempt for {}", quiz.getTitle());
+        } finally {
+            if (restoreDraftStatus) {
+                quiz.setPublished(false);
+                quizRepository.saveAndFlush(quiz);
+            }
+        }
+    }
+
+    private SubmitAttemptRequest buildSubmission(Quiz quiz, int incorrectAnswerCount) {
+        List<Question> questions = questionRepository.findByQuizIdOrderByDisplayOrderAsc(quiz.getId());
+        if (incorrectAnswerCount < 0 || incorrectAnswerCount > questions.size()) {
+            throw new IllegalStateException("Invalid demo incorrect-answer count for " + quiz.getTitle());
+        }
+
+        List<SubmitAnswerRequest> answers = java.util.stream.IntStream.range(0, questions.size())
+                .mapToObj(index -> {
+                    Question question = questions.get(index);
+                    boolean chooseCorrect = index < questions.size() - incorrectAnswerCount;
+                    Option selectedOption = selectOption(question, chooseCorrect);
+                    return new SubmitAnswerRequest(question.getId(), selectedOption.getId());
+                })
+                .toList();
+        return new SubmitAttemptRequest(answers);
+    }
+
+    private Option selectOption(Question question, boolean chooseCorrect) {
+        return optionRepository.findByQuestionIdOrderByDisplayOrderAsc(question.getId())
+                .stream()
+                .filter(option -> Boolean.TRUE.equals(option.getCorrect()) == chooseCorrect)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Missing demo " + (chooseCorrect ? "correct" : "incorrect")
+                                + " option for question " + question.getId()
+                ));
     }
 
     private void createQuestion(Quiz quiz, DemoQuestion demoQuestion, int displayOrder) {
@@ -251,6 +344,14 @@ public class DemoDataSeeder implements CommandLineRunner {
                         10,
                         false,
                         List.of()
+                ),
+                new DemoQuiz(
+                        LOCKED_QUIZ_TITLE,
+                        "software-engineering",
+                        "Preserve a realistic submitted-attempt history while demonstrating why structural editing is locked.",
+                        8,
+                        false,
+                        lockedDemoQuestions()
                 )
         );
     }
@@ -776,6 +877,51 @@ public class DemoDataSeeder implements CommandLineRunner {
                         "It allows administrators to read every user's password more easily.",
                         "It removes the need to authenticate users.",
                         "It guarantees that every user chooses a unique password."
+                )
+        );
+    }
+
+    private static List<DemoQuestion> lockedDemoQuestions() {
+        return List.of(
+                question(
+                        "locked-demo-001",
+                        "Why can editing an old quiz question damage historical result accuracy?",
+                        0,
+                        "Submitted results refer to the question and option structure used when the attempt was scored. Changing that structure can make an old score or review inconsistent with what the learner answered.",
+                        "It can make stored answers and scores inconsistent with the original quiz.",
+                        "It automatically improves every historical score.",
+                        "It removes the need to preserve submitted answers.",
+                        "It changes only the quiz title and nothing else."
+                ),
+                question(
+                        "locked-demo-002",
+                        "Why should published quiz structure remain stable after learners submit attempts?",
+                        1,
+                        "Stable questions and options preserve the meaning of submitted answers, scores, and reviews. Metadata may follow separate rules, but structural changes must not rewrite history.",
+                        "So the quiz can expose correct answers before submission.",
+                        "So submitted answers, scores, and reviews keep their original meaning.",
+                        "So every learner receives the same score regardless of answers.",
+                        "So authentication is no longer required."
+                ),
+                question(
+                        "locked-demo-003",
+                        "What data does an answer review need for a submitted single-choice attempt?",
+                        2,
+                        "A useful review connects each question to the learner's selected option, the correct option, and the explanation. This data is shown only after submission under the existing ownership rules.",
+                        "Only the quiz title.",
+                        "Only the learner's email address.",
+                        "The selected option, correct option, and explanation for each question.",
+                        "A public list of every user's attempts."
+                ),
+                question(
+                        "locked-demo-004",
+                        "Why might a quiz be unpublished while its old attempts are still preserved?",
+                        3,
+                        "Unpublishing prevents new public starts without erasing legitimate learner history. Existing submitted attempts can still support owned result and review flows.",
+                        "To delete all historical answers silently.",
+                        "To make the draft visible in the public catalog.",
+                        "To allow anyone to edit another user's result.",
+                        "To stop new public starts while retaining legitimate attempt history."
                 )
         );
     }

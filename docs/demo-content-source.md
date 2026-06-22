@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-This document is the human-reviewable source of truth for the initial QuizMaster demo content. It contains the six public quizzes in the initial catalog and the two admin-oriented draft quizzes approved through Phase 6.3B.
+This document is the human-reviewable source of truth for QuizMaster demo content. It contains six public quizzes, two admin-oriented validation drafts, and one locked historical quiz.
 
 Correct answers and explanations are included because this is an internal content source. A future seeder may consume this content, but the public API must not expose correct answers or explanations before a quiz attempt is submitted and the existing authorization rules permit access.
 
@@ -38,6 +38,7 @@ Correct answers and explanations are included because this is an internal conten
 | Networking Fundamentals | Computer Networking | Public | 10 minutes | 8 | Easy-Medium |
 | Software Engineering Basics | Software Engineering | Public | 10 minutes | 8 | Easy-Medium |
 | English for IT Basics | English for IT | Public | 8 minutes | 6 | Easy-Medium |
+| Locked Demo Quiz | Software Engineering | Draft after submitted attempt | 8 minutes | 4 | Easy-Medium |
 
 ## 5. Full Content: Java Core Basics
 
@@ -1000,7 +1001,108 @@ This quiz intentionally has no questions or options. It must remain unpublished 
 
 **Explanation:** Refactoring improves the internal structure of code while preserving its intended external behavior. It can make code clearer, simpler, or easier to maintain.
 
-## 12. Review Checklist
+## 12. Locked Demo Quiz
+
+**Category:** Software Engineering
+
+**Final status:** Unpublished after its seeded attempt is submitted
+
+**Time limit:** 8 minutes
+
+**Question count:** 4
+
+**Purpose:** Preserve a realistic historical attempt and demonstrate the existing structural editing lock without hardcoding it.
+
+### Question 1
+
+**Key:** `locked-demo-001`
+
+**Topic:** Historical result integrity
+
+**Difficulty:** easy
+
+**Question:** Why can editing an old quiz question damage historical result accuracy?
+
+**Options:**
+- A. It can make stored answers and scores inconsistent with the original quiz.
+- B. It automatically improves every historical score.
+- C. It removes the need to preserve submitted answers.
+- D. It changes only the quiz title and nothing else.
+
+**Correct answer:** A
+
+**Explanation:** Submitted results refer to the question and option structure used when the attempt was scored. Changing that structure can make an old score or review inconsistent with what the learner answered.
+
+### Question 2
+
+**Key:** `locked-demo-002`
+
+**Topic:** Published content stability
+
+**Difficulty:** easy
+
+**Question:** Why should published quiz structure remain stable after learners submit attempts?
+
+**Options:**
+- A. So the quiz can expose correct answers before submission.
+- B. So submitted answers, scores, and reviews keep their original meaning.
+- C. So every learner receives the same score regardless of answers.
+- D. So authentication is no longer required.
+
+**Correct answer:** B
+
+**Explanation:** Stable questions and options preserve the meaning of submitted answers, scores, and reviews. Metadata may follow separate rules, but structural changes must not rewrite history.
+
+### Question 3
+
+**Key:** `locked-demo-003`
+
+**Topic:** Review data
+
+**Difficulty:** medium
+
+**Question:** What data does an answer review need for a submitted single-choice attempt?
+
+**Options:**
+- A. Only the quiz title.
+- B. Only the learner's email address.
+- C. The selected option, correct option, and explanation for each question.
+- D. A public list of every user's attempts.
+
+**Correct answer:** C
+
+**Explanation:** A useful review connects each question to the learner's selected option, the correct option, and the explanation. This data is shown only after submission under the existing ownership rules.
+
+### Question 4
+
+**Key:** `locked-demo-004`
+
+**Topic:** Unpublishing with history
+
+**Difficulty:** easy
+
+**Question:** Why might a quiz be unpublished while its old attempts are still preserved?
+
+**Options:**
+- A. To delete all historical answers silently.
+- B. To make the draft visible in the public catalog.
+- C. To allow anyone to edit another user's result.
+- D. To stop new public starts while retaining legitimate attempt history.
+
+**Correct answer:** D
+
+**Explanation:** Unpublishing prevents new public starts without erasing legitimate learner history. Existing submitted attempts can still support owned result and review flows.
+
+## 13. Demo Attempt Plan
+
+- Seed one submitted attempt for `demo-user@quizmaster.local` on Java Core Basics with 7 correct answers out of 8.
+- Seed one submitted attempt for `demo-user@quizmaster.local` on Locked Demo Quiz with 2 correct answers out of 4.
+- Fully answer both attempts through the existing attempt start/submit domain service so scoring, answer rows, result data, and review data use normal invariants.
+- Keep `demo-empty@quizmaster.local` at zero attempts.
+- Treat manual QA attempt `309` on SQL Basics as local QA history, not seeded data; never modify or use it for seed idempotency.
+- Identify seeded attempts by demo user, quiz, and submitted state so repeated seed runs create neither duplicate attempts nor duplicate answers.
+
+## 14. Review Checklist
 
 - [x] Java Core Basics has exactly 8 questions.
 - [x] Spring Boot Essentials has exactly 8 questions.
@@ -1010,6 +1112,7 @@ This quiz intentionally has no questions or options. It must remain unpublished 
 - [x] English for IT Basics has exactly 6 questions.
 - [x] Draft — Spring Security Practice has exactly 3 questions and is unpublished.
 - [x] Draft — Empty Quiz For Publish Validation has 0 questions and is unpublished.
+- [x] Locked Demo Quiz has 4 questions, a submitted attempt, and is unpublished afterward.
 - [x] Every question has exactly 4 options.
 - [x] Every question declares exactly 1 correct answer.
 - [x] Every question has a 1-3 sentence explanation.
@@ -1020,7 +1123,7 @@ This quiz intentionally has no questions or options. It must remain unpublished 
 - [x] No public API behavior is changed by this document.
 - [x] The completed content is ready for seeder implementation review.
 
-## 13. Notes for the Future Seeder
+## 15. Notes for the Seeder
 
 - Preserve each question key as a stable content identifier or lookup key.
 - Preserve quiz metadata exactly unless a later content review explicitly changes it.

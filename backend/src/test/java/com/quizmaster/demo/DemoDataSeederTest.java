@@ -1,5 +1,11 @@
 package com.quizmaster.demo;
 
+import com.quizmaster.attempt.AttemptRepository;
+import com.quizmaster.attempt.AttemptService;
+import com.quizmaster.attempt.StartAttemptRequest;
+import com.quizmaster.attempt.StartAttemptResponse;
+import com.quizmaster.attempt.SubmitAttemptRequest;
+import com.quizmaster.attempt.SubmitAttemptResponse;
 import com.quizmaster.category.Category;
 import com.quizmaster.category.CategoryRepository;
 import com.quizmaster.quiz.Option;
@@ -15,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +61,12 @@ class DemoDataSeederTest {
     private OptionRepository optionRepository;
 
     @Mock
+    private AttemptRepository attemptRepository;
+
+    @Mock
+    private AttemptService attemptService;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     private DemoDataSeeder seeder;
@@ -65,6 +79,8 @@ class DemoDataSeederTest {
                 quizRepository,
                 questionRepository,
                 optionRepository,
+                attemptRepository,
+                attemptService,
                 passwordEncoder
         );
     }
@@ -87,6 +103,9 @@ class DemoDataSeederTest {
         Map<String, Quiz> quizzesByTitleAndCategory = new HashMap<>();
         List<Question> savedQuestions = new ArrayList<>();
         List<List<Option>> savedOptionBatches = new ArrayList<>();
+        Map<Long, Quiz> quizByAttemptId = new HashMap<>();
+        Set<Long> submittedQuizIds = new HashSet<>();
+        List<SubmitAttemptRequest> submissions = new ArrayList<>();
 
         when(userRepository.findByEmail(anyString())).thenAnswer(invocation ->
                 Optional.ofNullable(usersByEmail.get(invocation.getArgument(0))));
@@ -126,18 +145,59 @@ class DemoDataSeederTest {
             assertThat(options).hasSize(4);
             assertThat(options).extracting(Option::getDisplayOrder).containsExactly(1, 2, 3, 4);
             assertThat(options).filteredOn(Option::getCorrect).hasSize(1);
+            options.forEach(option -> option.setId(ids.getAndIncrement()));
             savedOptionBatches.add(options);
             return options;
         });
+        when(questionRepository.findByQuizIdOrderByDisplayOrderAsc(anyLong())).thenAnswer(invocation ->
+                savedQuestions.stream()
+                        .filter(question -> question.getQuiz().getId().equals(invocation.getArgument(0)))
+                        .toList());
+        when(optionRepository.findByQuestionIdOrderByDisplayOrderAsc(anyLong())).thenAnswer(invocation ->
+                savedOptionBatches.stream()
+                        .flatMap(List::stream)
+                        .filter(option -> option.getQuestion().getId().equals(invocation.getArgument(0)))
+                        .toList());
+        when(quizRepository.saveAndFlush(any(Quiz.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(attemptRepository.existsByUserIdAndQuizIdAndSubmittedAtIsNotNull(anyLong(), anyLong()))
+                .thenAnswer(invocation -> submittedQuizIds.contains(invocation.getArgument(1)));
+        when(attemptService.startAttempt(any(StartAttemptRequest.class), anyString())).thenAnswer(invocation -> {
+            StartAttemptRequest request = invocation.getArgument(0);
+            Quiz quiz = quizzesByTitleAndCategory.values().stream()
+                    .filter(candidate -> candidate.getId().equals(request.quizId()))
+                    .findFirst()
+                    .orElseThrow();
+            long attemptId = ids.getAndIncrement();
+            quizByAttemptId.put(attemptId, quiz);
+            return new StartAttemptResponse(attemptId, quiz.getId(), quiz.getTitle(), quiz.getTimeLimitMinutes(), List.of());
+        });
+        when(attemptService.submitAttempt(anyLong(), any(SubmitAttemptRequest.class), anyString()))
+                .thenAnswer(invocation -> {
+                    Long attemptId = invocation.getArgument(0);
+                    SubmitAttemptRequest request = invocation.getArgument(1);
+                    Quiz quiz = quizByAttemptId.get(attemptId);
+                    submissions.add(request);
+                    submittedQuizIds.add(quiz.getId());
+                    return new SubmitAttemptResponse(
+                            attemptId,
+                            quiz.getId(),
+                            quiz.getTitle(),
+                            countCorrectAnswers(request, savedOptionBatches),
+                            request.answers().size(),
+                            0,
+                            null,
+                            null
+                    );
+                });
 
         seeder.run();
 
         assertThat(usersByEmail).hasSize(3);
         assertThat(categoriesBySlug).hasSize(6);
-        assertThat(quizzesByTitleAndCategory).hasSize(8);
-        assertThat(savedQuestions).hasSize(49);
-        assertThat(savedOptionBatches).hasSize(49);
-        assertThat(savedOptionBatches.stream().mapToInt(List::size).sum()).isEqualTo(196);
+        assertThat(quizzesByTitleAndCategory).hasSize(9);
+        assertThat(savedQuestions).hasSize(53);
+        assertThat(savedOptionBatches).hasSize(53);
+        assertThat(savedOptionBatches.stream().mapToInt(List::size).sum()).isEqualTo(212);
 
         Quiz javaCoreBasics = findQuiz(quizzesByTitleAndCategory, "Java Core Basics");
         Quiz springBootEssentials = findQuiz(quizzesByTitleAndCategory, "Spring Boot Essentials");
@@ -153,6 +213,7 @@ class DemoDataSeederTest {
                 quizzesByTitleAndCategory,
                 "Draft — Empty Quiz For Publish Validation"
         );
+        Quiz lockedDemoQuiz = findQuiz(quizzesByTitleAndCategory, "Locked Demo Quiz");
 
         assertPublicQuiz(javaCoreBasics, "java-core", 10, 8, savedQuestions, savedOptionBatches);
         assertPublicQuiz(springBootEssentials, "spring-boot", 10, 8, savedQuestions, savedOptionBatches);
@@ -185,6 +246,8 @@ class DemoDataSeederTest {
         assertThat(practiceDraft.getCategory().getSlug()).isEqualTo("spring-boot");
         assertThat(emptyDraft.isPublished()).isFalse();
         assertThat(emptyDraft.getCategory().getSlug()).isEqualTo("java-core");
+        assertThat(lockedDemoQuiz.isPublished()).isFalse();
+        assertThat(lockedDemoQuiz.getCategory().getSlug()).isEqualTo("software-engineering");
 
         List<Question> practiceQuestions = savedQuestions.stream()
                 .filter(question -> question.getQuiz() == practiceDraft)
@@ -202,14 +265,38 @@ class DemoDataSeederTest {
             assertThat(options).filteredOn(Option::getCorrect).hasSize(1);
         });
 
+        List<Question> lockedQuestions = savedQuestions.stream()
+                .filter(question -> question.getQuiz() == lockedDemoQuiz)
+                .toList();
+        assertThat(lockedQuestions).hasSize(4);
+        assertThat(lockedQuestions).allMatch(question -> !question.getExplanation().isBlank());
+        assertThat(submissions).hasSize(2);
+        assertThat(submissions).extracting(submission -> submission.answers().size()).containsExactly(8, 4);
+        assertThat(submissions).allSatisfy(submission -> {
+            assertThat(submission.answers()).extracting(answer -> answer.questionId()).doesNotHaveDuplicates();
+            assertThat(submission.answers()).extracting(answer -> answer.optionId()).doesNotHaveDuplicates();
+        });
+        assertThat(countCorrectAnswers(submissions.get(0), savedOptionBatches)).isEqualTo(7);
+        assertThat(countCorrectAnswers(submissions.get(1), savedOptionBatches)).isEqualTo(2);
+
         seeder.run();
 
         verify(userRepository, times(3)).save(any(User.class));
         verify(passwordEncoder, times(3)).encode("password123");
         verify(categoryRepository, times(6)).save(any(Category.class));
-        verify(quizRepository, times(8)).save(any(Quiz.class));
-        verify(questionRepository, times(49)).save(any(Question.class));
-        verify(optionRepository, times(49)).saveAll(anyList());
+        verify(quizRepository, times(9)).save(any(Quiz.class));
+        verify(quizRepository, times(2)).saveAndFlush(any(Quiz.class));
+        verify(questionRepository, times(53)).save(any(Question.class));
+        verify(optionRepository, times(53)).saveAll(anyList());
+        verify(attemptService, times(2)).startAttempt(
+                any(StartAttemptRequest.class),
+                org.mockito.ArgumentMatchers.eq("demo-user@quizmaster.local")
+        );
+        verify(attemptService, times(2)).submitAttempt(
+                anyLong(),
+                any(SubmitAttemptRequest.class),
+                org.mockito.ArgumentMatchers.eq("demo-user@quizmaster.local")
+        );
     }
 
     @Test
@@ -226,8 +313,12 @@ class DemoDataSeederTest {
         });
 
         Quiz existingQuiz = new Quiz();
+        existingQuiz.setId(2L);
         when(quizRepository.findByTitleAndCategoryId(anyString(), anyLong()))
                 .thenReturn(Optional.of(existingQuiz));
+        when(attemptRepository.existsByUserIdAndQuizIdAndSubmittedAtIsNotNull(anyLong(), anyLong()))
+                .thenReturn(true);
+        existingUser.setId(1L);
 
         seeder.run();
 
@@ -237,6 +328,8 @@ class DemoDataSeederTest {
         verify(quizRepository, never()).save(any(Quiz.class));
         verify(questionRepository, never()).save(any(Question.class));
         verify(optionRepository, never()).saveAll(anyList());
+        verify(attemptService, never()).startAttempt(any(), anyString());
+        verify(attemptService, never()).submitAttempt(anyLong(), any(), anyString());
     }
 
     private Quiz findQuiz(Map<String, Quiz> quizzesByTitleAndCategory, String title) {
@@ -244,6 +337,20 @@ class DemoDataSeederTest {
                 .filter(quiz -> quiz.getTitle().equals(title))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    private int countCorrectAnswers(
+            SubmitAttemptRequest submission,
+            List<List<Option>> savedOptionBatches
+    ) {
+        Set<Long> correctOptionIds = savedOptionBatches.stream()
+                .flatMap(List::stream)
+                .filter(option -> Boolean.TRUE.equals(option.getCorrect()))
+                .map(Option::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        return (int) submission.answers().stream()
+                .filter(answer -> correctOptionIds.contains(answer.optionId()))
+                .count();
     }
 
     private void assertPublicQuiz(

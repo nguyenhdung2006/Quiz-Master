@@ -1,5 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { apiClient, getAccessToken, setAccessToken } from "../api/client.js";
+import {
+  apiClient,
+  getAccessToken,
+  isUnauthorized,
+  setAccessToken,
+  UNAUTHORIZED_EVENT,
+} from "../api/client.js";
 
 const AuthContext = createContext(null);
 
@@ -31,7 +37,7 @@ export function AuthProvider({ children }) {
       setCurrentUser(user);
       return user;
     } catch (error) {
-      if (error.isNetworkError) {
+      if (!isUnauthorized(error)) {
         setCurrentUser(null);
         setAuthError(error);
         return null;
@@ -48,6 +54,11 @@ export function AuthProvider({ children }) {
     refreshCurrentUser();
   }, [refreshCurrentUser]);
 
+  useEffect(() => {
+    window.addEventListener(UNAUTHORIZED_EVENT, clearAuth);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, clearAuth);
+  }, [clearAuth]);
+
   const applyAuthResponse = useCallback(async (authResponse) => {
     if (!authResponse?.accessToken) {
       clearAuth();
@@ -61,7 +72,12 @@ export function AuthProvider({ children }) {
     try {
       const user = await apiClient.get("/api/auth/me");
       setCurrentUser(user);
-    } catch {
+    } catch (error) {
+      if (isUnauthorized(error)) {
+        clearAuth();
+        throw error;
+      }
+
       setCurrentUser(authResponse.user || null);
     }
 
@@ -70,7 +86,10 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(
     async (email, password) => {
-      const response = await apiClient.post("/api/auth/login", { email, password });
+      const response = await apiClient.post("/api/auth/login", { email, password }, {
+        attachToken: false,
+        handleUnauthorized: false,
+      });
       return applyAuthResponse(response);
     },
     [applyAuthResponse],
@@ -78,7 +97,10 @@ export function AuthProvider({ children }) {
 
   const register = useCallback(
     async (registerData) => {
-      const response = await apiClient.post("/api/auth/register", registerData);
+      const response = await apiClient.post("/api/auth/register", registerData, {
+        attachToken: false,
+        handleUnauthorized: false,
+      });
       return applyAuthResponse(response);
     },
     [applyAuthResponse],

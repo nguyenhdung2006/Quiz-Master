@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { startAttempt } from "../api/attemptApi.js";
 import { getQuizDetail } from "../api/publicQuizApi.js";
@@ -20,6 +20,7 @@ export default function QuizDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [startError, setStartError] = useState("");
   const [starting, setStarting] = useState(false);
+  const startLockRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -60,7 +61,7 @@ export default function QuizDetailPage() {
   }, [id]);
 
   async function handleStartQuiz() {
-    if (authLoading || starting) {
+    if (authLoading || startLockRef.current) {
       return;
     }
 
@@ -69,6 +70,7 @@ export default function QuizDetailPage() {
       return;
     }
 
+    startLockRef.current = true;
     setStarting(true);
     setStartError("");
 
@@ -78,6 +80,7 @@ export default function QuizDetailPage() {
     } catch (requestError) {
       setStartError(requestError.message || "Unable to start this quiz.");
     } finally {
+      startLockRef.current = false;
       setStarting(false);
     }
   }

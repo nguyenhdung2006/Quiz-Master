@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext.jsx";
 import AuthShell from "../components/auth/AuthShell.jsx";
@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const submitLockRef = useRef(false);
 
   const from = location.state?.from?.pathname || "/quizzes";
   const successMessage = location.state?.message;
@@ -21,7 +22,7 @@ export default function LoginPage() {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (submitting) {
+    if (submitLockRef.current) {
       return;
     }
 
@@ -30,6 +31,7 @@ export default function LoginPage() {
       return;
     }
 
+    submitLockRef.current = true;
     setSubmitting(true);
     setError("");
 
@@ -39,6 +41,7 @@ export default function LoginPage() {
     } catch (requestError) {
       setError(requestError.message || "Login failed. Please try again.");
     } finally {
+      submitLockRef.current = false;
       setSubmitting(false);
     }
   }

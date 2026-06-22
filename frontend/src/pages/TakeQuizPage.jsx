@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { getTakeAttempt, submitAttempt } from "../api/attemptApi.js";
 import ErrorState from "../components/common/ErrorState.jsx";
@@ -62,6 +62,7 @@ export default function TakeQuizPage() {
   const [selectedAnswers, setSelectedAnswers] = useState(() => readStoredAnswers(attemptId));
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const submitLockRef = useRef(false);
 
   useEffect(() => {
     setSelectedAnswers(readStoredAnswers(attemptId));
@@ -160,7 +161,7 @@ export default function TakeQuizPage() {
   }
 
   async function handleSubmit() {
-    if (submitting) {
+    if (submitLockRef.current) {
       return;
     }
 
@@ -184,6 +185,7 @@ export default function TakeQuizPage() {
       optionId,
     }));
 
+    submitLockRef.current = true;
     setSubmitting(true);
     setSubmitError("");
 
@@ -194,6 +196,7 @@ export default function TakeQuizPage() {
     } catch (requestError) {
       setSubmitError(requestError.message || "Unable to submit this attempt.");
     } finally {
+      submitLockRef.current = false;
       setSubmitting(false);
     }
   }

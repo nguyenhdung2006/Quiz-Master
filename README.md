@@ -116,6 +116,25 @@ origin, for example `VITE_API_BASE_URL=https://api.quizmaster.example`. No produ
 into the repository. When a production build omits the variable, requests remain same-origin instead of
 silently targeting localhost; the deployment must then proxy `/api` to the backend.
 
+### Frontend deployment environment
+
+```text
+Vercel project root: frontend
+Build command: npm run build
+Output directory: dist
+SPA fallback: frontend/vercel.json
+```
+
+Required for the selected separate-origin staging architecture:
+
+```env
+VITE_API_BASE_URL=https://<backend-staging-url>
+```
+
+Vite embeds this value at build time, so changing it in Vercel requires a rebuild/redeploy. Do not use a
+localhost API URL in production and never expose database credentials or backend secrets through a
+`VITE_` variable. See `frontend/.env.production.example` for a safe placeholder.
+
 ## Demo data
 
 QuizMaster includes an explicit local/demo seed flow for curated accounts, categories, quizzes, questions, explanations, attempts, and a locked quiz example. The seed does not run by default.

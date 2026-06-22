@@ -93,6 +93,11 @@ Build the backend container from `backend/`:
 docker build -t quizmaster-backend .
 ```
 
+Render uses a Docker Web Service with repository root directory `backend` and Dockerfile
+`backend/Dockerfile`; it does not use a native Java build command. Required environment variables,
+local verification and first-deploy checks are documented in
+[`docs/deployment-backend.md`](docs/deployment-backend.md).
+
 Run tests:
 
 ```powershell

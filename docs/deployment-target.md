@@ -1,0 +1,426 @@
+# QuizMaster Deployment Target
+
+## Status
+
+**Phase 8.1 DONE / CLOSED — PASS WITH NOTES.**
+
+Deployment target đã được chọn cho môi trường staging:
+
+- Frontend: Vercel
+- Backend: Render Web Service
+- Database: Neon PostgreSQL
+
+Đây là quyết định kiến trúc staging cho Phase 8, không phải tuyên bố production-ready.
+
+## Scope
+
+Phase 8.1 chỉ so sánh provider và chốt deployment target. Phase này không:
+
+- deploy ứng dụng hoặc tạo URL thật;
+- tạo database/account trên provider;
+- sửa backend/frontend config;
+- thêm Dockerfile, migration hoặc SPA rewrite;
+- chạy demo seeder;
+- push GitHub.
+
+Thông tin provider được đối chiếu với tài liệu chính thức ngày 2026-06-22. Pricing, quota và free tier có thể thay đổi, nên phải kiểm tra lại ngay trước khi tạo tài nguyên.
+
+## Current State
+
+- Repository là monorepo với `frontend/` và `backend/`.
+- Branch hiện tại: `main`.
+- Working tree sạch khi bắt đầu Phase 8.1.
+- Latest commit khi bắt đầu: `0e23912 Document Phase 8 deployment preparation audit`.
+- Local `main` đang ahead `origin/main` 21 commit.
+- Backend dùng Spring Boot 3.5.15 và Java 25.
+- Frontend dùng React, Vite 6.4.3 và `BrowserRouter`.
+- PostgreSQL staging/production chưa được provision.
+- Phase 8.0 đã xác nhận backend tests/package và frontend build đều pass.
+
+## Decision Summary
+
+Chọn kiến trúc tách ba dịch vụ:
+
+| Thành phần | Target | Region/phạm vi | Mục đích |
+|---|---|---|---|
+| Frontend | Vercel | Global CDN | Static React/Vite staging |
+| Backend | Render Web Service | Singapore | Spring Boot API staging |
+| Database | Neon PostgreSQL | AWS Asia Pacific Singapore (`aws-ap-southeast-1`) | PostgreSQL staging |
+
+Backend và database cùng khu vực Singapore để giảm latency. Vercel phục vụ frontend tĩnh qua mạng edge/global nên không cần buộc cùng một compute region cho kiến trúc hiện tại.
+
+Quyết định có một điều kiện kỹ thuật quan trọng: theo [Render Supported Languages](https://render.com/docs/language-support), Render không hỗ trợ Java bằng native runtime; Java phải được deploy bằng Docker. Vì vậy Phase sau phải thiết kế Docker image Java 25 trước khi deploy. Build/start command native đề xuất ban đầu không được xem là hợp lệ ở thời điểm audit.
+
+## Selected Staging Architecture
+
+```text
+Browser
+  -> Vercel static frontend
+  -> HTTPS API calls
+  -> Render Web Service (Singapore, Docker/Java 25)
+  -> TLS PostgreSQL connection
+  -> Neon PostgreSQL (Singapore)
+```
+
+Frontend chỉ biết public backend URL. Backend giữ toàn bộ JWT secret và database credentials. Database không được expose trực tiếp cho frontend.
+
+## Selected Platforms
+
+### Frontend
+
+**Vercel** được chọn cho React/Vite frontend.
+
+- Vercel có hướng dẫn chính thức cho Vite, Git integration và preview URL cho pull request.
+- Root directory có thể đặt là `frontend` trong monorepo.
+- Build command: `npm run build`.
+- Output directory: `dist`.
+- Build-time environment variable: `VITE_API_BASE_URL`.
+- Custom domain có thể thêm sau; không thực hiện trong Phase 8.1.
+- Vite SPA deep linking không hoạt động mặc định. [Vercel Vite docs](https://vercel.com/docs/frameworks/frontend/vite) yêu cầu `vercel.json` rewrite về `/index.html`; file này được hoãn sang Phase 8.5.
+- Vercel Hobby miễn phí cho project cá nhân/quy mô nhỏ nhưng bị giới hạn non-commercial personal use và quota theo tháng. Nếu QuizMaster chuyển sang mục đích thương mại phải đánh giá Pro plan theo [Hobby Plan docs](https://vercel.com/docs/plans/hobby).
+
+### Backend
+
+**Render Web Service** được chọn cho Spring Boot API, region Singapore.
+
+- Hỗ trợ Git-based deploy, monorepo root directory, environment variables, logs, HTTPS managed và custom domain.
+- Mỗi web service có subdomain `onrender.com`; HTTP được redirect sang HTTPS và TLS được terminate tại load balancer.
+- [Render Web Services docs](https://render.com/docs/web-services) yêu cầu bind `0.0.0.0`, khuyến nghị dùng biến `PORT`, mặc định là `10000`; Render đôi khi có thể phát hiện port khác nhưng không nên dựa vào hành vi này.
+- Render không hỗ trợ native Java. Target cụ thể phải là **Render Web Service chạy Docker image Java 25**.
+- Repository hiện chưa có Dockerfile, nên đây là prerequisite cho phase hardening sau, không phải thay đổi của 8.1.
+- Free Web Service spin down sau 15 phút không có inbound traffic; lần wake tiếp theo có thể mất khoảng một phút. Free tier có 750 instance-hours/workspace/tháng và các quota khác. Chỉ phù hợp staging/demo, không phù hợp production theo [Render Free docs](https://render.com/docs/free).
+
+Kế hoạch cấu hình sau hardening:
+
+```text
+Service type: Web Service
+Runtime: Docker
+Root directory: backend
+Region: Singapore
+Branch: main
+Build/start: defined by a Java 25 Dockerfile to be added in a later phase
+Health check: to be defined before staging deploy
+```
+
+Không dùng cấu hình native sau vì Render hiện không có Java native runtime:
+
+```text
+Build command: ./mvnw clean package
+Start command: java -jar target/quizmaster-0.0.1-SNAPSHOT.jar
+```
+
+Hai lệnh trên vẫn đúng khi chạy trong một môi trường Java phù hợp, nhưng không tự tạo ra Java runtime trên Render.
+
+### Database
+
+**Neon PostgreSQL** được chọn, staging trước, region Singapore.
+
+- Managed PostgreSQL, có console, direct/pooled connection và database branching.
+- Neon cung cấp region AWS Singapore, cùng khu vực với Render Singapore. Region của project không thể đổi; muốn đổi phải tạo project mới và migrate theo [Neon Regions docs](https://neon.com/docs/introduction/regions).
+- Neon yêu cầu kết nối SSL/TLS. Connection string chính thức chứa `sslmode=require`; backend cần chuyển thành JDBC URL tương thích pgJDBC và kiểm thử thực tế theo [Neon connection docs](https://neon.com/docs/connect/connect-from-any-app).
+- Pooled connection là mặc định trong Neon console và hỗ trợ nhiều concurrent connections hơn. Cần xác minh pooling mode tương thích với Hibernate/JPA trước staging.
+- Free plan hiện được mô tả cho prototype/side project, có scale-to-zero, 0,5 GB storage/project và 100 CU-hours/project/tháng. Các quota phải được kiểm tra lại theo [Neon Plans docs](https://neon.com/docs/introduction/plans) trước khi provision.
+- Branching giúp tách thử nghiệm, nhưng không thay thế backup/restore runbook cho production.
+
+## Why This Architecture
+
+1. Phù hợp project cá nhân/portfolio và không cần tự quản lý VPS.
+2. Tách frontend/backend/database giúp khoanh vùng lỗi build, CORS, API và database.
+3. Vercel phù hợp static Vite và có preview deployments.
+4. Render và Neon đều có Singapore, giảm latency backend-database cho người dùng Việt Nam.
+5. Docker trên Render cho phép pin Java 25 thay vì phụ thuộc native runtime không tồn tại.
+6. Neon có managed PostgreSQL, TLS, dashboard và branching phù hợp staging.
+7. Stack vẫn cho phép nâng từng thành phần độc lập khi chuyển từ demo/staging sang production.
+
+Đổi lại, kiến trúc này có ba dashboard, ba nhóm quota và yêu cầu cấu hình CORS/URL/secret chính xác.
+
+## Options Considered
+
+### Option A — Vercel + Render + Neon
+
+**Pros:** frontend workflow đơn giản; backend/database cùng Singapore; managed HTTPS/PostgreSQL; tách lỗi rõ; Neon branching thuận tiện.
+
+**Cons:** Render cần Docker cho Java; free backend có cold start; phải quản lý config trên ba nền tảng; không có private network giữa Render và Neon.
+
+**Operational complexity:** trung bình. Docker làm tăng setup ban đầu nhưng cho runtime Java 25 có thể lặp lại.
+
+**Cost/free-tier risk:** phù hợp staging nhỏ; Vercel Hobby giới hạn non-commercial; Render free sleep/quota; Neon free có compute/storage/egress limits.
+
+**Suitability:** tốt nhất cho QuizMaster staging sau khi hardening config và Docker.
+
+**Main blockers:** Dockerfile Java 25, `PORT`, datasource production, migration/DDL, SPA rewrite.
+
+**Verdict:** **SELECTED WITH NOTES**.
+
+### Option B — Vercel/Netlify + Railway + Railway PostgreSQL
+
+**Pros:** Railway có hướng dẫn chính thức cho Spring Boot, GitHub deploy, auto-detect Java, Dockerfile và database trong cùng project; logs/env vars dễ tiếp cận.
+
+**Cons:** [Railway Spring Boot guide](https://docs.railway.com/guides/spring-boot) minh họa Java 17, không xác nhận Java 25 cho QuizMaster; runtime vẫn cần kiểm chứng hoặc Docker. Pricing chủ yếu usage-based và có thể kém dự đoán hơn với project sinh viên chạy lâu.
+
+**Operational complexity:** thấp đến trung bình; ít dashboard hơn Option A.
+
+**Cost/free-tier risk:** trial/credits và usage pricing có thể thay đổi; cần kiểm tra [Railway Pricing docs](https://docs.railway.com/reference/pricing/plans) lúc triển khai.
+
+**Suitability:** phương án dự phòng tốt nếu Render Docker/cold start gây trở ngại.
+
+**Main blockers:** Java 25 chưa được chứng minh; vẫn còn config/PORT/database/migration blockers của project.
+
+**Verdict:** **DEFERRED — first fallback**.
+
+### Option C — Netlify + Render + Render PostgreSQL/Neon
+
+**Pros:** Netlify nhận diện Vite, gợi ý `npm run build` và `dist`; hỗ trợ deploy preview, env vars, redirects; backend Render giữ nguyên.
+
+**Cons:** không tạo lợi thế quyết định so với Vercel cho frontend hiện tại. SPA vẫn cần `_redirects`; Render Java vẫn cần Docker. Render free PostgreSQL hết hạn sau 30 ngày nên không phù hợp staging bền vững; Neon tốt hơn ở lựa chọn database này.
+
+**Operational complexity:** tương đương Option A.
+
+**Cost/free-tier risk:** quota/credit của Netlify và cold start Render; Render free DB có lifecycle quá ngắn.
+
+**Suitability:** tốt nhưng không vượt Option A. [Netlify Vite docs](https://docs.netlify.com/build/frameworks/framework-setup-guides/vite/) xác nhận build/publish setup phù hợp.
+
+**Main blockers:** `_redirects`, Docker Java 25, `PORT`, datasource/migration.
+
+**Verdict:** **NOT SELECTED — Netlify is the frontend fallback**.
+
+### Option D — VPS
+
+**Pros:** kiểm soát hoàn toàn Java 25, Nginx, system service, PostgreSQL, port, domain và chi phí cố định.
+
+**Cons:** phải tự harden OS/firewall/TLS, backup, monitoring, patching, process supervision và database recovery; single-server failure risk; cần kỹ năng vận hành cao hơn đáng kể.
+
+**Operational complexity:** cao nhất.
+
+**Cost/free-tier risk:** thường có chi phí tháng cố định; chi phí thời gian vận hành lớn dù VM rẻ.
+
+**Suitability:** chưa phù hợp giai đoạn portfolio/staging đầu tiên.
+
+**Main blockers:** thiếu toàn bộ runbook infrastructure/security/backup/monitoring.
+
+**Verdict:** **DEFERRED — reconsider only when control/cost requirements justify operations**.
+
+## Rejected / Deferred Options
+
+- **Netlify:** không bị loại về kỹ thuật; giữ làm fallback frontend. Vercel được chọn vì workflow Vite/preview rõ và đúng target mặc định.
+- **Railway:** fallback backend/database số một; chưa chọn vì cần xác minh Java 25 và pricing/usage behavior.
+- **Fly.io:** linh hoạt về regions/containers nhưng thiên về container/network/CLI operations; không giảm việc phải tạo image Java 25 so với Render và phức tạp hơn cho lần staging đầu.
+- **Koyeb:** có Git/Docker deployment và edge regions, nhưng Java 25/build behavior, free-tier availability và region phù hợp cần xác minh thêm trước khi thay target đã chọn.
+- **Render PostgreSQL:** cùng provider/backend là lợi thế, nhưng free database hết hạn sau 30 ngày; Neon phù hợp staging tồn tại lâu hơn.
+- **Supabase PostgreSQL:** managed PostgreSQL tốt, dashboard mạnh, nhưng QuizMaster không cần Auth/Storage/Realtime/BaaS; thêm bề mặt sản phẩm không cần thiết.
+- **VPS PostgreSQL:** hoãn vì backup, upgrades, TLS, monitoring và disaster recovery phải tự quản lý.
+
+## Staging URL Placeholders
+
+Các giá trị dưới đây chỉ là placeholder, chưa tồn tại và chưa được kiểm thử:
+
+```text
+Frontend staging URL: https://quizmaster-<placeholder>.vercel.app
+Backend staging URL: https://quizmaster-api-<placeholder>.onrender.com
+Database: Neon PostgreSQL project/database URL to be created in Phase 8.4
+```
+
+Không invent tên deployment thật và không dùng placeholder làm CORS/env production trước khi platform cấp URL thực tế.
+
+## Branch and Deployment Policy
+
+- Branch deploy: `main`.
+- Source: GitHub repository sau khi user cho phép push.
+- Hiện local `main` đang ahead `origin/main` 21 commit tại đầu Phase 8.1.
+- Không push trong Phase 8.1.
+- Lần deploy staging đầu tiên: ưu tiên manual deploy/explicit trigger nếu platform hỗ trợ, để quan sát từng bước build và logs.
+- Sau khi config staging ổn định: có thể bật auto deploy từ `main`.
+- Vercel preview deployments có thể dùng cho PR sau này; chưa thiết kế branch workflow nâng cao trong Phase này.
+- Production phải có approval/checklist riêng; không auto-promote từ staging chỉ vì build pass.
+
+## Platform Configuration Plan
+
+### Vercel Frontend
+
+```text
+Framework: Vite
+Root directory: frontend
+Install command: npm ci
+Build command: npm run build
+Output directory: dist
+Branch: main
+Environment: staging/preview values first
+```
+
+Phase 8.5 cần thêm `frontend/vercel.json` rewrite mọi SPA route về `/index.html`, sau đó kiểm thử refresh trực tiếp các deep route.
+
+### Render Backend
+
+```text
+Service type: Web Service
+Runtime: Docker
+Root directory: backend
+Region: Singapore
+Branch: main
+Dockerfile: to be designed and added in a later High-reasoning phase
+Public URL: Render-provided onrender.com staging URL
+Auto deploy: off/manual for first attempt; reconsider after stable staging
+```
+
+Docker image phải pin Java 25, build executable JAR, chạy non-root nếu khả thi, bind `0.0.0.0:$PORT`, có health-check strategy và không bake secret vào image.
+
+### Neon PostgreSQL
+
+```text
+Provider: Neon PostgreSQL
+Purpose: staging first
+Region: AWS Asia Pacific Singapore
+Connection: JDBC/pgJDBC over required TLS
+Credentials: stored only in Render environment variables
+Pooling: evaluate pooled versus direct URL for Hibernate/JPA
+```
+
+Không tạo project, import local data hoặc seed trong Phase 8.1.
+
+## Environment Variables by Platform
+
+### Frontend
+
+Vercel build environment:
+
+```env
+VITE_API_BASE_URL=https://<backend-staging-url>
+```
+
+`VITE_` variables được đưa vào client bundle; tuyệt đối không đặt JWT secret hoặc DB credentials ở frontend.
+
+### Backend
+
+Render environment dự kiến:
+
+```env
+SPRING_PROFILES_ACTIVE=prod
+JWT_SECRET=<strong-secret-at-least-32-chars>
+CORS_ALLOWED_ORIGINS=https://<frontend-staging-url>
+SPRING_DATASOURCE_URL=<neon-jdbc-url-with-required-tls>
+SPRING_DATASOURCE_USERNAME=<neon-username>
+SPRING_DATASOURCE_PASSWORD=<neon-password>
+PORT=<provided-by-render>
+```
+
+Lưu ý contract hiện tại trong `application.yaml` còn dùng `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` với fallback local. Spring standard `SPRING_DATASOURCE_*` được chọn làm contract dự kiến, nhưng Phase 8.2 phải xác minh/chuẩn hóa chỉ một bộ tên và đảm bảo production fail-fast trước khi set trên Render.
+
+Seeder policy:
+
+```text
+Do not set app.seed-demo=true in production.
+Staging demo seed, if needed, must be a separate explicit decision.
+```
+
+### Database
+
+Neon tạo connection details gồm host, database, role/user, password và TLS parameters. Các giá trị này chỉ được chuyển vào Render secret environment.
+
+```text
+DB credentials are stored only in backend platform environment variables.
+Never expose DB credentials to frontend.
+Never commit the Neon connection string.
+```
+
+## Known Limitations
+
+- Vercel Hobby chỉ dành cho personal/non-commercial use và có usage limits.
+- Render Free Web Service cold-start sau idle, filesystem ephemeral và không dành cho production.
+- Render cần Docker cho Java; build/start native không dùng được.
+- Neon Free có compute/storage/egress limits và scale-to-zero behavior.
+- Giao tiếp Render–Neon đi qua public TLS endpoint, không phải shared private network.
+- Ba provider tạo thêm coordination overhead cho URL, CORS, secrets và incident diagnosis.
+- Region của Render service/Neon project không đổi trực tiếp được; chọn Singapore ngay từ lúc tạo.
+
+## Risks Before Deployment
+
+1. Datasource production vẫn có fallback local/default credentials.
+2. Hibernate vẫn dùng `ddl-auto=update`; chưa có migration version hóa.
+3. `show-sql=true` vẫn áp dụng từ config chung.
+4. Backend chưa map dynamic `PORT`; Render khuyến nghị bind biến này.
+5. `backend/mvnw` có Git mode `100644`, không executable trên Linux.
+6. Render không có native Java; Java 25 phải được pin/cấu hình qua Docker.
+7. Frontend chưa có Vercel SPA rewrite, nên refresh deep route có thể 404.
+8. Node version chưa được pin.
+9. Neon PostgreSQL staging chưa được provision; JDBC/TLS/pooling chưa được smoke test.
+10. Local Git chưa push 21 commit tại đầu Phase; provider chưa thể thấy code mới.
+11. Chưa có staging deployment hoặc staging smoke test.
+12. Seeder chưa có hard guard cấm profile production.
+
+## Required Fixes Before Staging Deploy
+
+1. Harden production datasource fail-fast.
+2. Decide DDL/migration strategy.
+3. Disable `show-sql` in prod.
+4. Add dynamic `PORT` support for Render.
+5. Fix Linux executable bit for `backend/mvnw`.
+6. Add and verify a minimal Java 25 Dockerfile for Render; document fallback plan.
+7. Add Vercel SPA fallback.
+8. Pin Node version if required by the selected Vercel runtime policy.
+9. Provision Neon PostgreSQL staging database in Singapore.
+10. Convert/verify Neon connection details as pgJDBC URL with required TLS.
+11. Set backend/frontend env vars without exposing secrets.
+12. Push GitHub only after user approval.
+13. Run staging smoke tests, including cold-start behavior and deep-route refresh.
+
+## What Phase 8.1 Does Not Do
+
+- Không deploy frontend/backend.
+- Không tạo Vercel, Render hoặc Neon resource/account.
+- Không tạo/import/reset database.
+- Không chạy seeder.
+- Không thêm Dockerfile hoặc sửa executable bit.
+- Không sửa datasource, JPA, port, CORS, JWT hoặc env config.
+- Không thêm `vercel.json`.
+- Không sửa schema hoặc thêm Flyway/Liquibase.
+- Không push remote.
+- Không claim QuizMaster production-ready.
+
+## Recommended Next Steps
+
+Tiếp theo nên tách thành:
+
+```text
+Phase 8.2A Backend Env/Datasource/PORT/Docker Runtime Hardening
+Dùng: 5.5 High
+```
+
+Lý do: bước kế tiếp bắt đầu sửa production config thật, chuẩn hóa datasource fail-fast, `PORT`, Docker Java 25, secret contract và seed safety. Các thay đổi có rủi ro deployment/security và cần backend tests/package cùng review Docker image.
+
+Sau đó mới thực hiện SPA rewrite/frontend config, provision Neon staging, tạo platform services và smoke test theo các phase riêng có approval.
+
+## Official References
+
+- [Vercel: Vite](https://vercel.com/docs/frameworks/frontend/vite)
+- [Vercel: Hobby Plan](https://vercel.com/docs/plans/hobby)
+- [Netlify: Vite](https://docs.netlify.com/build/frameworks/framework-setup-guides/vite/)
+- [Render: Web Services](https://render.com/docs/web-services)
+- [Render: Supported Languages](https://render.com/docs/language-support)
+- [Render: Free Instances](https://render.com/docs/free)
+- [Render: Regions](https://render.com/docs/regions)
+- [Railway: Spring Boot](https://docs.railway.com/guides/spring-boot)
+- [Neon: Connect from any application](https://neon.com/docs/connect/connect-from-any-app)
+- [Neon: Plans](https://neon.com/docs/introduction/plans)
+- [Neon: Regions](https://neon.com/docs/introduction/regions)
+
+## Test / Build Evidence
+
+Backend tests và frontend build được skip vì Phase 8.1 chỉ thêm tài liệu quyết định deployment target, không sửa code hoặc config. Phase 8.0 ngay trước đó đã xác minh backend tests 55/55 pass, backend clean package pass và frontend production build pass.
+
+QA của Phase 8.1 tập trung vào kiểm tra Markdown structure, Git diff và đối chiếu các giả định platform với official docs.
+
+## Final Conclusion
+
+**Phase 8.1 DONE / CLOSED — PASS WITH NOTES.**
+
+Deployment target selected for staging:
+
+```text
+Frontend: Vercel
+Backend: Render Web Service (Docker, Singapore)
+Database: Neon PostgreSQL (AWS Singapore)
+```
+
+QuizMaster will target a staging deployment first. QuizMaster is still not production-ready. Production readiness requires Phase 8.2–8.9 config hardening, Docker/runtime work, database provisioning, actual deployments and smoke tests.
+
+The next phase should harden environment/configuration and Java 25 runtime before any real deployment.

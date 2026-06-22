@@ -34,6 +34,7 @@ Thông tin provider được đối chiếu với tài liệu chính thức ngà
 - Local `main` đang ahead `origin/main` 21 commit.
 - Backend dùng Spring Boot 3.5.15 và Java 25.
 - Frontend dùng React, Vite 6.4.3 và `BrowserRouter`.
+- Phase 8.5 đã verify Vercel root/build/output/env contract, parse SPA rewrite và production bundle; chưa deploy.
 - Neon PostgreSQL staging đã được provision thủ công trong Phase 8.4; production database chưa được tạo.
 - Phase 8.0 đã xác nhận backend tests/package và frontend build đều pass.
 
@@ -251,6 +252,8 @@ SPA fallback: frontend/vercel.json -> /index.html
 
 `frontend/vercel.json` đã rewrite mọi SPA route về `/index.html`. Sau deploy phải kiểm thử refresh trực tiếp các deep route và bảo đảm static assets vẫn được phục vụ đúng.
 
+Phase 8.5 đã parse thành công rewrite, build bằng Render URL placeholder và xác nhận bundle không chứa local backend `localhost:8080`/`127.0.0.1:8080`. Actual Vercel project, environment variables và deployed route refresh vẫn được defer tới Phase 8.7.
+
 ### Render Backend
 
 ```text
@@ -381,14 +384,14 @@ Never commit the Neon connection string.
 
 ## Recommended Next Steps
 
-Backend hardening, frontend Vercel config, backend runtime verification và Neon staging preparation đã được thực hiện qua Phase 8.4. Bước tiếp theo nên là:
+Backend hardening, frontend Vercel readiness verification, backend runtime verification và Neon staging preparation đã được thực hiện qua Phase 8.5. Bước tiếp theo nên là:
 
 ```text
-Phase 8.5 Frontend Production Config / Frontend Production Deploy Readiness Verification
+Phase 8.6 Backend Staging Deploy
 Dùng: 5.5 High
 ```
 
-Phase 8.5 nên verify lại Vercel root/build/output/env/SPA config đã tạo ở Phase 8.2B và chỉ sửa nếu có gap. Docker image và Render-to-Neon connection vẫn cần verification ở lần controlled staging deploy.
+Phase 8.6 nên tạo và verify Render staging backend có kiểm soát để lấy backend HTTPS URL thật. Phase 8.7 sau đó mới đặt Vercel env, deploy frontend và browser-test SPA deep-route refresh/CORS.
 
 Tạo platform services, push và smoke test vẫn cần approval ở các phase riêng.
 
@@ -426,4 +429,4 @@ Database: Neon PostgreSQL (AWS Singapore)
 
 QuizMaster will target a staging deployment first. QuizMaster is still not production-ready. Production readiness requires Phase 8.2–8.9 config hardening, Docker/runtime work, database provisioning, actual deployments and smoke tests.
 
-The next phase should verify frontend production deployment readiness before controlled staging deployment work.
+The next phase should perform the controlled backend staging deployment before any frontend deployment.

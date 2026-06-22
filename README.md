@@ -142,7 +142,9 @@ VITE_API_BASE_URL=https://<backend-staging-url>
 
 Vite embeds this value at build time, so changing it in Vercel requires a rebuild/redeploy. Do not use a
 localhost API URL in production and never expose database credentials or backend secrets through a
-`VITE_` variable. See `frontend/.env.production.example` for a safe placeholder.
+`VITE_` variable. See `frontend/.env.production.example` for a safe placeholder. Vercel monorepo settings,
+SPA fallback and the deferred deployed-route checklist are documented in
+[`docs/deployment-frontend.md`](docs/deployment-frontend.md).
 
 ## Demo data
 

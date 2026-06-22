@@ -54,6 +54,18 @@ cd D:\QuizMaster\backend
 This profile-specific JWT safeguard does not by itself make the application production-ready; the
 remaining Phase 7 configuration and deployment hardening still applies.
 
+Backend CORS uses `app.cors.allowed-origins`. The default `dev` profile allows only the canonical local
+frontend origin `http://localhost:5173`; `http://127.0.0.1:5173` is not enabled. The `prod` profile
+requires `CORS_ALLOWED_ORIGINS`, with no wildcard or local fallback. Use a comma-separated list for
+multiple deployed frontend origins:
+
+```powershell
+$env:CORS_ALLOWED_ORIGINS="https://quizmaster.example,https://admin.quizmaster.example"
+```
+
+Missing, blank, or wildcard production CORS configuration causes backend startup to fail. CORS still
+allows the API methods plus the `Authorization` and `Content-Type` headers required by the application.
+
 Run tests:
 
 ```powershell
@@ -62,6 +74,20 @@ cd D:\QuizMaster\backend
 ```
 
 Current API summary is documented in `docs/backend-api.md`.
+
+## Frontend
+
+Frontend API requests are centralized in `frontend/src/api/client.js` and use `VITE_API_BASE_URL`.
+Copy the local value shown in `frontend/.env.example` when environment configuration is needed:
+
+```text
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+For a deployment with a separate backend origin, set the variable at build time to the real HTTPS API
+origin, for example `VITE_API_BASE_URL=https://api.quizmaster.example`. No production domain is built
+into the repository. When a production build omits the variable, requests remain same-origin instead of
+silently targeting localhost; the deployment must then proxy `/api` to the backend.
 
 ## Demo data
 

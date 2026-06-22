@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+const API_BASE_URL = (
+  configuredApiBaseUrl || (import.meta.env.DEV ? "http://localhost:8080" : "")
+).replace(/\/+$/, "");
 const TOKEN_STORAGE_KEY = "quizmaster.accessToken";
 const REQUEST_TIMEOUT_MS = 8000;
 const NETWORK_ERROR_MESSAGE =

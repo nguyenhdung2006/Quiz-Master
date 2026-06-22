@@ -96,9 +96,10 @@ Kế hoạch cấu hình sau hardening:
 Service type: Web Service
 Runtime: Docker
 Root directory: backend
+Dockerfile: backend/Dockerfile (resolved from the repository root)
 Region: Singapore
 Branch: main
-Build/start: defined by a Java 25 Dockerfile to be added in a later phase
+Build/start: defined by the committed Java 25 multi-stage Dockerfile
 Health check: to be defined before staging deploy
 ```
 
@@ -262,7 +263,7 @@ Public URL: Render-provided onrender.com staging URL
 Auto deploy: off/manual for first attempt; reconsider after stable staging
 ```
 
-Docker image phải pin Java 25, build executable JAR, chạy non-root nếu khả thi, bind `0.0.0.0:$PORT`, có health-check strategy và không bake secret vào image.
+Docker image pin Java 25 bằng Eclipse Temurin 25 JDK/JRE và build executable JAR. Backend config đọc `PORT` do platform cung cấp với fallback 8080. Health-check strategy và chạy container bằng non-root user vẫn cần quyết định trước production; secret không được bake vào image.
 
 ### Neon PostgreSQL
 
@@ -300,10 +301,11 @@ CORS_ALLOWED_ORIGINS=https://<frontend-staging-url>
 SPRING_DATASOURCE_URL=<neon-jdbc-url-with-required-tls>
 SPRING_DATASOURCE_USERNAME=<neon-username>
 SPRING_DATASOURCE_PASSWORD=<neon-password>
+SPRING_JPA_HIBERNATE_DDL_AUTO=<validate-or-update>
 PORT=<provided-by-render>
 ```
 
-Lưu ý contract hiện tại trong `application.yaml` còn dùng `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` với fallback local. Spring standard `SPRING_DATASOURCE_*` được chọn làm contract dự kiến, nhưng Phase 8.2 phải xác minh/chuẩn hóa chỉ một bộ tên và đảm bảo production fail-fast trước khi set trên Render.
+Profile production dùng Spring standard `SPRING_DATASOURCE_*` và không có fallback local/default. `validate` là DDL mặc định an toàn; staging database đầu tiên có thể tạm đặt `SPRING_JPA_HIBERNATE_DDL_AUTO=update` cho tới khi có migration version hóa.
 
 Seeder policy:
 
@@ -334,12 +336,12 @@ Never commit the Neon connection string.
 
 ## Risks Before Deployment
 
-1. Datasource production vẫn có fallback local/default credentials.
-2. Hibernate vẫn dùng `ddl-auto=update`; chưa có migration version hóa.
-3. `show-sql=true` vẫn áp dụng từ config chung.
-4. Backend chưa map dynamic `PORT`; Render khuyến nghị bind biến này.
-5. `backend/mvnw` có Git mode `100644`, không executable trên Linux.
-6. Render không có native Java; Java 25 phải được pin/cấu hình qua Docker.
+1. Datasource/JPA/PORT production đã được harden ở Phase 8.2A nhưng chưa được xác minh với Neon thật.
+2. Production mặc định `ddl-auto=validate`; chưa có migration version hóa. Staging `update` chỉ là giải pháp tạm.
+3. Production mặc định `show-sql=false`.
+4. Backend đã map dynamic `PORT` với fallback 8080 nhưng chưa smoke test trên Render.
+5. `backend/mvnw` đã được đánh dấu executable trong Git và Dockerfile vẫn chạy `chmod +x` phòng vệ.
+6. Render không có native Java; Java 25 được pin qua `backend/Dockerfile` nhưng local Docker build còn phụ thuộc Docker daemon/image availability.
 7. Frontend chưa có Vercel SPA rewrite, nên refresh deep route có thể 404.
 8. Node version chưa được pin.
 9. Neon PostgreSQL staging chưa được provision; JDBC/TLS/pooling chưa được smoke test.
@@ -349,19 +351,17 @@ Never commit the Neon connection string.
 
 ## Required Fixes Before Staging Deploy
 
-1. Harden production datasource fail-fast.
-2. Decide DDL/migration strategy.
-3. Disable `show-sql` in prod.
-4. Add dynamic `PORT` support for Render.
-5. Fix Linux executable bit for `backend/mvnw`.
-6. Add and verify a minimal Java 25 Dockerfile for Render; document fallback plan.
-7. Add Vercel SPA fallback.
-8. Pin Node version if required by the selected Vercel runtime policy.
-9. Provision Neon PostgreSQL staging database in Singapore.
-10. Convert/verify Neon connection details as pgJDBC URL with required TLS.
-11. Set backend/frontend env vars without exposing secrets.
-12. Push GitHub only after user approval.
-13. Run staging smoke tests, including cold-start behavior and deep-route refresh.
+1. Verify production datasource fail-fast and Neon JDBC/TLS against the real staging environment.
+2. Decide the production-grade Flyway/Liquibase migration strategy; keep staging `update` temporary.
+3. Verify `show-sql=false` and dynamic `PORT` behavior on Render.
+4. Build and verify `backend/Dockerfile` with an available Docker daemon and confirm the Temurin 25 tags.
+5. Add Vercel SPA fallback.
+6. Pin Node version if required by the selected Vercel runtime policy.
+7. Provision Neon PostgreSQL staging database in Singapore.
+8. Convert/verify Neon connection details as pgJDBC URL with required TLS.
+9. Set backend/frontend env vars without exposing secrets.
+10. Push GitHub only after user approval.
+11. Run staging smoke tests, including cold-start behavior and deep-route refresh.
 
 ## What Phase 8.1 Does Not Do
 
@@ -378,16 +378,16 @@ Never commit the Neon connection string.
 
 ## Recommended Next Steps
 
-Tiếp theo nên tách thành:
+Backend environment/runtime hardening đã được thực hiện trong Phase 8.2A. Bước tiếp theo nên là:
 
 ```text
-Phase 8.2A Backend Env/Datasource/PORT/Docker Runtime Hardening
-Dùng: 5.5 High
+Phase 8.2B Frontend Env Contract / Vercel SPA Deploy Config
+Dùng: 5.5 High nếu sửa config, Medium nếu chỉ planning/docs
 ```
 
-Lý do: bước kế tiếp bắt đầu sửa production config thật, chuẩn hóa datasource fail-fast, `PORT`, Docker Java 25, secret contract và seed safety. Các thay đổi có rủi ro deployment/security và cần backend tests/package cùng review Docker image.
+Sau đó mới provision Neon staging, xác minh JDBC/TLS và quyết định migration/DDL strategy trong một phase High riêng. Docker image vẫn cần build lại khi Docker daemon hoạt động.
 
-Sau đó mới thực hiện SPA rewrite/frontend config, provision Neon staging, tạo platform services và smoke test theo các phase riêng có approval.
+Tạo platform services, push và smoke test vẫn cần approval ở các phase riêng.
 
 ## Official References
 

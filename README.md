@@ -66,6 +66,33 @@ $env:CORS_ALLOWED_ORIGINS="https://quizmaster.example,https://admin.quizmaster.e
 Missing, blank, or wildcard production CORS configuration causes backend startup to fail. CORS still
 allows the API methods plus the `Authorization` and `Content-Type` headers required by the application.
 
+### Backend deployment environment
+
+The Render backend uses `backend/Dockerfile` to pin Java 25. Production datasource values are required
+and have no local/default fallback. Render supplies `PORT`; the backend reads it with a local fallback
+of `8080`.
+
+```env
+SPRING_PROFILES_ACTIVE=prod
+JWT_SECRET=<strong-secret-at-least-32-chars>
+CORS_ALLOWED_ORIGINS=https://<frontend-staging-url>
+SPRING_DATASOURCE_URL=<jdbc-postgresql-url-with-required-tls>
+SPRING_DATASOURCE_USERNAME=<db-username>
+SPRING_DATASOURCE_PASSWORD=<db-password>
+SPRING_JPA_HIBERNATE_DDL_AUTO=update # staging only until migrations exist
+PORT=<provided-by-platform>
+```
+
+Production defaults to `SPRING_JPA_HIBERNATE_DDL_AUTO=validate` and `show-sql=false`. A first staging
+database without migrations may temporarily use `update`; production v1.0 still requires a versioned
+migration strategy. Never set `app.seed-demo=true` or `APP_SEED_DEMO=true` in production.
+
+Build the backend container from `backend/`:
+
+```powershell
+docker build -t quizmaster-backend .
+```
+
 Run tests:
 
 ```powershell

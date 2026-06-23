@@ -107,6 +107,9 @@ Phase 8.6B deployed the backend staging service at `https://quizmaster-api-stagi
 Phase 8.7 deployed and verified the Vercel frontend staging integration at
 `https://quizmaster-staging.vercel.app`; see
 [`docs/phase-8-7-frontend-staging-deploy.md`](docs/phase-8-7-frontend-staging-deploy.md).
+Phase 8.8 completed the full staging smoke test with PASS WITH NOTES; see
+[`docs/phase-8-staging-smoke-test.md`](docs/phase-8-staging-smoke-test.md). Phase 8.9 closes the
+Phase 8 deployment QA ledger in [`docs/phase-8-closure-qa.md`](docs/phase-8-closure-qa.md).
 
 Neon staging database contract, SSL/JDBC format, empty-data policy and DDL limitations are documented in
 [`docs/deployment-database.md`](docs/deployment-database.md). The repository contains placeholders only;

@@ -20,8 +20,16 @@ in Phase 8.7.
 **Phase 8.7 DONE / CLOSED - PASS WITH NOTES.** Frontend staging Vercel deploy is complete at
 `https://quizmaster-staging.vercel.app` and is integrated with the Render backend staging URL. SPA route
 fallback, Vercel-origin CORS, public API calls, register/login/logout, protected user routes, and normal
-user admin blocking passed. Full quiz-taking/admin content smoke remains pending for Phase 8.8 because
-staging quiz content is not present yet.
+user admin blocking passed.
+
+**Phase 8.8 DONE / CLOSED - PASS WITH NOTES.** Full staging smoke completed through the deployed
+Vercel frontend, Render backend, and Neon database. Admin category/quiz management, draft quiz creation,
+publish validation, published public quiz, USER quiz-taking, result/review/history, ownership/security,
+CORS, SPA fallback, and no-localhost checks passed.
+
+**Phase 8.9 DONE / CLOSED - PASS WITH NOTES.** Phase 8 final closure QA is documented in
+`docs/phase-8-closure-qa.md`. Phase 8 is closed for staging deployment validation, but QuizMaster is
+still not production-ready.
 
 Deployment target đã được chọn cho môi trường staging:
 
@@ -359,34 +367,25 @@ Never commit the Neon connection string.
 - Ba provider tạo thêm coordination overhead cho URL, CORS, secrets và incident diagnosis.
 - Region của Render service/Neon project không đổi trực tiếp được; chọn Singapore ngay từ lúc tạo.
 
-## Risks Before Deployment
+## Remaining Risks After Phase 8 Closure
 
-1. Datasource/JPA/PORT production đã được harden ở Phase 8.2A nhưng chưa được xác minh với Neon thật.
-2. Production mặc định `ddl-auto=validate`; chưa có migration version hóa. Staging `update` chỉ là giải pháp tạm.
-3. Production mặc định `show-sql=false`.
-4. Backend đã map dynamic `PORT` với fallback 8080 nhưng chưa smoke test trên Render.
-5. `backend/mvnw` đã được đánh dấu executable trong Git và Dockerfile vẫn chạy `chmod +x` phòng vệ.
-6. Render không có native Java; Java 25 được pin qua `backend/Dockerfile`, nhưng Phase 8.3 vẫn không thể build image vì local Docker Linux daemon không hoạt động. Temurin 25 tags và container fail-fast remain NOT VERIFIED by an actual image build.
-7. Frontend đã có Vercel SPA rewrite nhưng chưa được smoke test trên URL staging thật.
-8. Node version chưa được pin; local build dùng Node 24.15.0 và Vercel runtime cần được chốt trước staging.
-9. Neon PostgreSQL staging đã provision; local direct JDBC/TLS smoke pass với PostgreSQL 18.4, nhưng Render network path, pooling và channel binding chưa được test.
-10. Local Git chưa push 21 commit tại đầu Phase; provider chưa thể thấy code mới.
-11. Chưa có staging deployment hoặc staging smoke test.
-12. Seeder chưa có hard guard cấm profile production.
+1. Production mặc định `ddl-auto=validate`, nhưng chưa có migration version hóa. Staging `update` chỉ là giải pháp tạm.
+2. Render Free service có thể sleep và cold start sau idle; Phase 8.9 vẫn quan sát request backend đầu tiên timeout ngắn rồi retry pass.
+3. Node version chưa được pin; local build dùng Node 24.15.0 và Vercel runtime cần được chốt trước production.
+4. Neon pooled connection, channel binding, backup/restore, retention và free-tier behavior vẫn cần review sâu hơn.
+5. Production database chưa được tạo.
+6. Monitoring, alerting, incident response và rollback vẫn chưa production-grade.
+7. Staging data là dữ liệu smoke test, chưa phải curated demo/production dataset.
 
-## Required Fixes Before Staging Deploy
+## Required Fixes Before Production Readiness
 
-1. Verify production datasource fail-fast and Neon JDBC/TLS against the real staging environment.
-2. Decide the production-grade Flyway/Liquibase migration strategy; keep staging `update` temporary.
-3. Verify `show-sql=false` and dynamic `PORT` behavior on Render.
-4. Build and verify `backend/Dockerfile` with an available Docker daemon and confirm the Temurin 25 tags.
-5. Verify Vercel SPA fallback on every important deep route after deployment.
-6. Confirm Vercel Node runtime, then pin it only if the selected supported version matches local/dependency requirements.
-7. Verify the provisioned Neon staging database from Render and review backup/free-tier limits.
-8. Establish versioned migrations and return staging/production to controlled `validate` behavior.
-9. Set backend/frontend env vars without exposing secrets.
-10. Push GitHub only after user approval.
-11. Run staging smoke tests, including cold-start behavior and deep-route refresh.
+1. Establish versioned migrations and return staging/production to controlled `validate` behavior.
+2. Confirm Vercel Node runtime, then pin it only if the selected supported version matches local/dependency requirements.
+3. Review Neon pooled/direct connection strategy, backup/restore, retention and free-tier limits.
+4. Create a separate production database only after approval, migration plan and rollback plan exist.
+5. Add monitoring, alerting, incident response and rollback runbooks.
+6. Decide custom domain, TLS/domain ownership and production CORS origins.
+7. Define a safe demo/content data policy.
 
 ## What Phase 8.1 Does Not Do
 
@@ -404,17 +403,16 @@ Never commit the Neon connection string.
 ## Recommended Next Steps
 
 Backend hardening, frontend Vercel readiness, backend runtime verification, Neon staging preparation,
-Render backend staging deploy, and Vercel frontend staging deploy have been completed through Phase 8.7.
+Render backend staging deploy, Vercel frontend staging deploy, full staging smoke, and final closure QA
+have been completed through Phase 8.9.
 Bước tiếp theo nên là:
 
 ```text
-Phase 8.8 - Staging Full Smoke Test
+Phase 9 - v1.0 Readiness Planning
 ```
 
-Phase 8.8 should create or provide controlled staging quiz content, then verify quiz-taking, result
-review, answer review, admin content management, and cold-start behavior.
-
-Tạo platform services, push và smoke test vẫn cần approval ở các phase riêng.
+Phase 9 should focus on README/demo polish, production hardening backlog, migration/backup strategy,
+monitoring, rollback, content policy, limitations cleanup, and optional custom domain planning.
 
 ## Official References
 

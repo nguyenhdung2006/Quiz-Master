@@ -2,6 +2,13 @@
 
 QuizMaster is a standalone quiz platform backend. It supports authentication, public quiz browsing, quiz attempts, answer review, and admin quiz management for the MVP.
 
+## Current status
+
+- Phase 8 deployment validation: DONE / CLOSED — PASS WITH NOTES
+- Phase 9 staging release formalization: PASS WITH NOTES
+- Current focus: v1.0 readiness
+- Next: Demo Data & Account Strategy, UX/UI Polish, Documentation/Portfolio Packaging, Production-Lite Hardening, Release Candidate QA
+
 ## Backend
 
 Backend path:
@@ -110,6 +117,8 @@ Phase 8.7 deployed and verified the Vercel frontend staging integration at
 Phase 8.8 completed the full staging smoke test with PASS WITH NOTES; see
 [`docs/phase-8-staging-smoke-test.md`](docs/phase-8-staging-smoke-test.md). Phase 8.9 closes the
 Phase 8 deployment QA ledger in [`docs/phase-8-closure-qa.md`](docs/phase-8-closure-qa.md).
+Phase 9 formalizes the staging release roadmap alignment in
+[`docs/phase-9-staging-release.md`](docs/phase-9-staging-release.md); it does not require redeployment.
 
 Neon staging database contract, SSL/JDBC format, empty-data policy and DDL limitations are documented in
 [`docs/deployment-database.md`](docs/deployment-database.md). The repository contains placeholders only;

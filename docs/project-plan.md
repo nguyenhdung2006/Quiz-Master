@@ -627,21 +627,32 @@ Deliverables:
 - My attempts page
 - Admin management pages
 
-### Phase 9: Testing, Cleanup, Deployment Preparation
+### Phase 9: Staging Release Formalization
 
 Purpose:
 
-- Stabilize the MVP for real use.
+- Align the roadmap with the completed Phase 8 staging deployment evidence.
 
 Deliverables:
 
-- Backend tests for key services and controllers
-- Frontend checks for main flows
-- Error handling cleanup
-- Environment variable documentation
-- PostgreSQL deployment preparation
-- Vercel frontend preparation
-- Render backend preparation
+- Record that Phase 8 is DONE / CLOSED — PASS WITH NOTES
+- Map old Public Deployment / Staging Release work to Phase 8.6–8.9 evidence
+- Record staging frontend/backend URLs
+- Confirm no redeployment or full smoke retest is required for this phase
+- Point next work toward v1.0 readiness
+
+### Phase B: Demo Data & Account Strategy
+
+Purpose:
+
+- Prepare safe demo data and account guidance for v1.0 readiness.
+
+Deliverables:
+
+- Demo data policy
+- Demo account strategy
+- Staging data cleanup or curation plan
+- Clear separation from production data
 
 ## 12. Risks and Mistakes to Avoid
 

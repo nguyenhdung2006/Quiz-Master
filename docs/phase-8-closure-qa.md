@@ -188,4 +188,4 @@ Phase 8.9 uses placeholder and redacted values only. Pre-commit scan found no ra
 
 Phase 8 is safe to close for staging deployment validation. The frontend, backend and database are deployed/provisioned and verified together through the Phase 8.8 smoke test, with Phase 8.9 closure sanity checks confirming the public staging endpoints and CORS behavior still match the expected state.
 
-QuizMaster is still not production-ready. The next work should move into Phase 9 / v1.0 readiness planning: README/demo polish, content/demo data policy, production hardening backlog, migration/backup strategy, monitoring, and optional custom domain planning.
+QuizMaster is still not production-ready. After Phase 9 formalization, the next work should move into Phase B - Demo Data & Account Strategy, followed by v1.0 readiness work for UI polish, documentation/portfolio packaging, production-lite hardening, release candidate QA, and release closure.

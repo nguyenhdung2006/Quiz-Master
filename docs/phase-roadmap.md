@@ -288,35 +288,52 @@ Exit criteria:
 - Admin pages can manage quiz content.
 - UI is readable on common desktop and mobile sizes.
 
-## Phase 9: Testing, Cleanup, Deployment Preparation
+## Phase 9: Staging Release Formalization
 
 Goal:
 
-- Stabilize the MVP for real use and deployment.
+- Align the roadmap with the completed Phase 8 staging deployment evidence.
 
 Deliverables:
 
-- Backend tests for key flows
-- Frontend flow verification
-- Error handling cleanup
-- Environment variable documentation
-- Vercel frontend preparation
-- Render backend preparation
-- PostgreSQL deployment preparation
+- Record that Phase 8 is DONE / CLOSED — PASS WITH NOTES
+- Map old Public Deployment / Staging Release work to Phase 8.6–8.9 evidence
+- Record staging frontend/backend URLs
+- Confirm no redeployment or full smoke retest is required for this phase
+- Point next work toward v1.0 readiness
+
+Risk level: Medium
+
+Complexity level: Low
+
+What not to do:
+
+- Do not redeploy backend or frontend.
+- Do not rerun full smoke tests.
+- Do not mutate staging data.
+- Do not add post-v1 features.
+- Do not claim production readiness.
+
+Exit criteria:
+
+- Phase 9 formalization doc exists.
+- Old staging release roadmap item is closed as PASS WITH NOTES.
+- Known limitations remain documented.
+- Next roadmap starts with Phase B — Demo Data & Account Strategy.
+
+## Phase B: Demo Data & Account Strategy
+
+Goal:
+
+- Prepare safe, intentional demo data and account guidance for v1.0 readiness.
+
+Deliverables:
+
+- Demo data policy
+- Demo account strategy
+- Staging data cleanup or curation plan
+- Clear separation from production data
 
 Risk level: Medium
 
 Complexity level: Medium
-
-What not to do:
-
-- Do not add new product features during cleanup.
-- Do not deploy without documented environment variables.
-- Do not ignore authentication and ownership tests.
-
-Exit criteria:
-
-- Key backend behavior is tested.
-- Main frontend flows are verified.
-- Deployment configuration is documented.
-- MVP is ready for deployment preparation.

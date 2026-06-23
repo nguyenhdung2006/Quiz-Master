@@ -337,3 +337,14 @@ Deliverables:
 Risk level: Medium
 
 Complexity level: Medium
+
+Status:
+
+- B1 strategy plan: PASS; see `docs/demo-data-strategy.md`.
+- B2 staging demo data creation: next.
+
+What not to do:
+
+- Do not publish admin credentials.
+- Do not store demo passwords in repository files.
+- Do not mutate staging data until Phase B2 is explicitly started.

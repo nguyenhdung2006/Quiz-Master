@@ -7,7 +7,8 @@ QuizMaster is a standalone quiz platform backend. It supports authentication, pu
 - Phase 8 deployment validation: DONE / CLOSED — PASS WITH NOTES
 - Phase 9 staging release formalization: PASS WITH NOTES
 - Current focus: v1.0 readiness
-- Next: Demo Data & Account Strategy, UX/UI Polish, Documentation/Portfolio Packaging, Production-Lite Hardening, Release Candidate QA
+- Phase B1 demo data/account strategy: PASS; see [`docs/demo-data-strategy.md`](docs/demo-data-strategy.md)
+- Next: Phase B2 Staging Demo Data Creation, then UX/UI Polish, Documentation/Portfolio Packaging, Production-Lite Hardening, Release Candidate QA
 
 ## Backend
 
@@ -185,4 +186,4 @@ cd D:\QuizMaster\backend
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--app.seed-demo=true"
 ```
 
-See [the demo data runbook](docs/demo-runbook.md) for safety notes, expected data, demo accounts, QA checks, and reset guidance.
+See [the local demo data runbook](docs/demo-runbook.md) for safety notes, expected data, demo accounts, QA checks, and reset guidance. For staging portfolio content strategy, see [the Phase B demo data strategy](docs/demo-data-strategy.md). Do not publish demo/admin passwords in committed files.

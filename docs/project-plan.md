@@ -654,6 +654,11 @@ Deliverables:
 - Staging data cleanup or curation plan
 - Clear separation from production data
 
+Status:
+
+- B1 strategy plan: PASS; see `docs/demo-data-strategy.md`.
+- B2 staging demo data creation: next.
+
 ## 12. Risks and Mistakes to Avoid
 
 Avoid changing the product identity:

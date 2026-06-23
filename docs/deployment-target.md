@@ -4,6 +4,10 @@
 
 **Phase 8.1 DONE / CLOSED — PASS WITH NOTES.**
 
+**Phase 8.6A DONE / CLOSED - READY FOR MANUAL RENDER DEPLOY.** This closes only the backend staging
+deploy preflight/checklist. Full Phase 8.6 is still open because Render service creation, real env var
+setup, deploy, logs, backend URL, and smoke tests are deferred to Phase 8.6B.
+
 Deployment target đã được chọn cho môi trường staging:
 
 - Frontend: Vercel

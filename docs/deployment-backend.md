@@ -1,5 +1,14 @@
 # QuizMaster Backend Deployment
 
+## Phase 8.6A Render Preflight
+
+Phase 8.6A is closed as backend staging deploy preflight only. The manual Render backend guide is
+[`docs/deployment-render-backend.md`](deployment-render-backend.md), and the phase report is
+[`docs/phase-8-6a-backend-staging-deploy-preflight.md`](phase-8-6a-backend-staging-deploy-preflight.md).
+
+No Render service has been created and no backend URL exists yet. Full Phase 8.6 remains open until
+Phase 8.6B performs the approved push, manual Render deploy, log review, and public smoke tests.
+
 ## Target
 
 Target: Render Web Service in Singapore, connected to Neon PostgreSQL in AWS Singapore. The first target is staging, not production.

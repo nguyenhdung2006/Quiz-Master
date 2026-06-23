@@ -97,6 +97,9 @@ Render uses a Docker Web Service with repository root directory `backend` and Do
 `backend/Dockerfile`; it does not use a native Java build command. Required environment variables,
 local verification and first-deploy checks are documented in
 [`docs/deployment-backend.md`](docs/deployment-backend.md).
+The Phase 8.6A manual Render backend preflight/checklist is documented in
+[`docs/deployment-render-backend.md`](docs/deployment-render-backend.md), with the closure report in
+[`docs/phase-8-6a-backend-staging-deploy-preflight.md`](docs/phase-8-6a-backend-staging-deploy-preflight.md).
 
 Neon staging database contract, SSL/JDBC format, empty-data policy and DDL limitations are documented in
 [`docs/deployment-database.md`](docs/deployment-database.md). The repository contains placeholders only;

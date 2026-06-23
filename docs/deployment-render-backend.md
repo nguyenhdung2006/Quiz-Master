@@ -28,7 +28,22 @@ Smoke results recorded in [`docs/phase-8-6b-render-backend-staging-deploy.md`](p
 - CORS unknown origin `https://evil.example`: PASS, blocked.
 - Render logs: PASS, Java 25/prod profile/Tomcat port 10000/Hikari/PostgreSQL connected, no secret values observed.
 
-Keep all Render env var values outside Git. Frontend/Vercel browser CORS verification remains deferred to Phase 8.7.
+Keep all Render env var values outside Git. Frontend/Vercel browser CORS verification was completed in
+Phase 8.7.
+
+## Phase 8.7 Frontend Origin Verified
+
+Vercel frontend staging was verified in Phase 8.7:
+
+```text
+Frontend URL: https://quizmaster-staging.vercel.app
+Backend URL: https://quizmaster-api-staging.onrender.com
+```
+
+Backend CORS accepted `https://quizmaster-staging.vercel.app` and `http://localhost:5173`, while
+`https://evil.example` was rejected with `403 Invalid CORS request`. Public categories/quizzes calls from
+the Vercel origin returned `200 OK` and empty arrays. Keep the Vercel origin in Render
+`CORS_ALLOWED_ORIGINS` for staging.
 
 ## Phase 8.6A2 Docker Path Supersedes Native Java Path
 

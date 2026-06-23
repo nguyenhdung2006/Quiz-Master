@@ -19,9 +19,16 @@ Latest deployed commit: a5a2563 Prepare Render Docker backend deployment
 The Phase 8.6B closure report is
 [`docs/phase-8-6b-render-backend-staging-deploy.md`](phase-8-6b-render-backend-staging-deploy.md).
 
-Backend deploy smoke passed for public categories, register, login, and CORS preflight checks. This does
-not make QuizMaster production-ready, and frontend staging deployment/browser verification remains
-pending.
+Backend deploy smoke passed for public categories, register, login, and CORS preflight checks. Frontend
+staging deployment/browser verification was completed later in Phase 8.7. This does not make QuizMaster
+production-ready.
+
+## Phase 8.7 Frontend Integration
+
+Frontend staging is now deployed at `https://quizmaster-staging.vercel.app` and was verified against this
+Render backend in Phase 8.7. Backend CORS accepted the exact Vercel origin and rejected an unknown origin.
+Public `GET /api/categories` and `GET /api/quizzes` from the Vercel origin returned `200 OK` with empty
+arrays, matching the current staging data state. Full quiz-taking smoke remains deferred to Phase 8.8.
 
 ## Phase 8.6A Render Preflight
 

@@ -104,6 +104,9 @@ Phase 8.6A2 confirms the preferred Render backend path is Docker; see
 [`docs/phase-8-6a2-render-docker-backend-preflight.md`](docs/phase-8-6a2-render-docker-backend-preflight.md).
 Phase 8.6B deployed the backend staging service at `https://quizmaster-api-staging.onrender.com`; see
 [`docs/phase-8-6b-render-backend-staging-deploy.md`](docs/phase-8-6b-render-backend-staging-deploy.md).
+Phase 8.7 deployed and verified the Vercel frontend staging integration at
+`https://quizmaster-staging.vercel.app`; see
+[`docs/phase-8-7-frontend-staging-deploy.md`](docs/phase-8-7-frontend-staging-deploy.md).
 
 Neon staging database contract, SSL/JDBC format, empty-data policy and DDL limitations are documented in
 [`docs/deployment-database.md`](docs/deployment-database.md). The repository contains placeholders only;
@@ -150,8 +153,14 @@ VITE_API_BASE_URL=https://<backend-staging-url>
 Vite embeds this value at build time, so changing it in Vercel requires a rebuild/redeploy. Do not use a
 localhost API URL in production and never expose database credentials or backend secrets through a
 `VITE_` variable. See `frontend/.env.production.example` for a safe placeholder. Vercel monorepo settings,
-SPA fallback and the deferred deployed-route checklist are documented in
+SPA fallback and the deployed-route checklist are documented in
 [`docs/deployment-frontend.md`](docs/deployment-frontend.md).
+
+Current staging frontend:
+
+```text
+https://quizmaster-staging.vercel.app
+```
 
 ## Demo data
 

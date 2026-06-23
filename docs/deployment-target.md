@@ -14,8 +14,14 @@ and health check `/api/categories`. Phase 8.6B later completed this deploy.
 
 **Phase 8.6B DONE / CLOSED - PASS WITH NOTES.** Backend staging Render Docker deploy is complete at
 `https://quizmaster-api-staging.onrender.com`. Public categories, register, login, and CORS curl
-preflight checks passed. Frontend Vercel deploy and browser CORS/flow verification remain pending for
-Phase 8.7.
+preflight checks passed. Frontend Vercel deploy and browser CORS/flow verification were completed later
+in Phase 8.7.
+
+**Phase 8.7 DONE / CLOSED - PASS WITH NOTES.** Frontend staging Vercel deploy is complete at
+`https://quizmaster-staging.vercel.app` and is integrated with the Render backend staging URL. SPA route
+fallback, Vercel-origin CORS, public API calls, register/login/logout, protected user routes, and normal
+user admin blocking passed. Full quiz-taking/admin content smoke remains pending for Phase 8.8 because
+staging quiz content is not present yet.
 
 Deployment target đã được chọn cho môi trường staging:
 
@@ -225,13 +231,13 @@ Hai lệnh trên vẫn đúng khi chạy trong một môi trường Java phù h�
 - **Supabase PostgreSQL:** managed PostgreSQL tốt, dashboard mạnh, nhưng QuizMaster không cần Auth/Storage/Realtime/BaaS; thêm bề mặt sản phẩm không cần thiết.
 - **VPS PostgreSQL:** hoãn vì backup, upgrades, TLS, monitoring và disaster recovery phải tự quản lý.
 
-## Staging URL Placeholders
+## Staging URLs
 
-Các giá trị dưới đây chỉ là placeholder, chưa tồn tại và chưa được kiểm thử:
+Current staging URLs verified through Phase 8.7:
 
 ```text
-Frontend staging URL: https://quizmaster-<placeholder>.vercel.app
-Backend staging URL: https://quizmaster-api-<placeholder>.onrender.com
+Frontend staging URL: https://quizmaster-staging.vercel.app
+Backend staging URL: https://quizmaster-api-staging.onrender.com
 Database: Neon PostgreSQL staging project `quizmaster-staging` (connection details remain secret/placeholders)
 ```
 
@@ -265,7 +271,7 @@ SPA fallback: frontend/vercel.json -> /index.html
 
 `frontend/vercel.json` đã rewrite mọi SPA route về `/index.html`. Sau deploy phải kiểm thử refresh trực tiếp các deep route và bảo đảm static assets vẫn được phục vụ đúng.
 
-Phase 8.5 đã parse thành công rewrite, build bằng Render URL placeholder và xác nhận bundle không chứa local backend `localhost:8080`/`127.0.0.1:8080`. Actual Vercel project, environment variables và deployed route refresh vẫn được defer tới Phase 8.7.
+Phase 8.5 đã parse thành công rewrite, build bằng Render URL placeholder và xác nhận bundle không chứa local backend `localhost:8080`/`127.0.0.1:8080`. Phase 8.7 later verified the actual Vercel project, environment variable, CORS, and deployed route refresh.
 
 ### Render Backend
 
@@ -397,14 +403,16 @@ Never commit the Neon connection string.
 
 ## Recommended Next Steps
 
-Backend hardening, frontend Vercel readiness verification, backend runtime verification và Neon staging preparation đã được thực hiện qua Phase 8.5. Bước tiếp theo nên là:
+Backend hardening, frontend Vercel readiness, backend runtime verification, Neon staging preparation,
+Render backend staging deploy, and Vercel frontend staging deploy have been completed through Phase 8.7.
+Bước tiếp theo nên là:
 
 ```text
-Phase 8.6 Backend Staging Deploy
-Dùng: 5.5 High
+Phase 8.8 - Staging Full Smoke Test
 ```
 
-Phase 8.6 nên tạo và verify Render staging backend có kiểm soát để lấy backend HTTPS URL thật. Phase 8.7 sau đó mới đặt Vercel env, deploy frontend và browser-test SPA deep-route refresh/CORS.
+Phase 8.8 should create or provide controlled staging quiz content, then verify quiz-taking, result
+review, answer review, admin content management, and cold-start behavior.
 
 Tạo platform services, push và smoke test vẫn cần approval ở các phase riêng.
 

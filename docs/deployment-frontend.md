@@ -1,8 +1,37 @@
 # QuizMaster Frontend Deployment
 
+## Phase 8.7 Staging Deployment Completed
+
+Frontend staging has been deployed on Vercel and verified against the Render backend staging service.
+
+```text
+Status: deployed for staging
+Frontend URL: https://quizmaster-staging.vercel.app
+Backend URL: https://quizmaster-api-staging.onrender.com
+Vercel Root Directory: frontend
+Build command: npm run build
+Output directory: dist
+Build-time API URL: https://quizmaster-api-staging.onrender.com
+```
+
+Smoke results recorded in
+[`docs/phase-8-7-frontend-staging-deploy.md`](phase-8-7-frontend-staging-deploy.md):
+
+- Local production build with the Render staging URL: PASS.
+- Bundle scan: no `localhost:8080` or `127.0.0.1:8080`; Render staging URL present.
+- Deployed route checks for `/`, `/quizzes`, `/login`, and `/register`: PASS.
+- Vercel origin CORS preflight: PASS.
+- Unknown origin CORS preflight: PASS, blocked.
+- Browser register/login/logout and protected route smoke: PASS.
+- Public catalog data: PASS WITH NOTES, empty staging arrays are expected at this phase.
+
+Full quiz-taking and admin content smoke remain deferred to Phase 8.8 because controlled staging quiz
+content is not present yet. This staging deployment does not make QuizMaster production-ready.
+
 ## Purpose
 
-Tài liệu này mô tả contract và checklist cho lần triển khai frontend QuizMaster lên Vercel staging trong tương lai. Đây là tài liệu readiness; Phase 8.5 không tạo Vercel project, không đặt environment variable thật và không deploy.
+Tai lieu nay mo ta contract, checklist va ket qua trien khai frontend QuizMaster len Vercel staging.
+Phase 8.5 la readiness-only; Phase 8.7 da verify deployment that tren Vercel.
 
 ## Platform and Monorepo Settings
 
@@ -24,7 +53,7 @@ Không thêm Netlify configuration vì frontend target đã chốt là Vercel. K
 Vercel staging phải đặt build-time variable sau khi Render cấp backend staging URL thật:
 
 ```env
-VITE_API_BASE_URL=https://<backend-staging-url>
+VITE_API_BASE_URL=https://quizmaster-api-staging.onrender.com
 ```
 
 Placeholder an toàn dùng trong docs/config example:
@@ -35,7 +64,8 @@ VITE_API_BASE_URL=https://quizmaster-api-<placeholder>.onrender.com
 
 `VITE_API_BASE_URL` là biến public được Vite nhúng vào client bundle lúc build. Thay đổi giá trị trong Vercel yêu cầu rebuild/redeploy. Không đặt JWT secret, database credential hoặc bất kỳ secret nào trong biến có prefix `VITE_`.
 
-Backend Render staging URL chưa tồn tại ở Phase 8.5. Không dùng placeholder làm giá trị platform thật; cập nhật bằng URL HTTPS thật sau Phase 8.6.
+Backend Render staging URL was assigned in Phase 8.6B and wired into Vercel in Phase 8.7. Do not use
+placeholders as real platform values.
 
 ## Development and Production Behavior
 
@@ -106,25 +136,21 @@ Kết quả:
 - không có `localhost:8080`;
 - không có `127.0.0.1:8080`.
 
-Bundle có literal chung `http://localhost` từ React Router để tạo URL khi browser origin không khả dụng. Đây không phải backend API endpoint; API client production đã nhúng Render placeholder và không chứa localhost port 8080.
+Bundle có literal chung `http://localhost` từ React Router để tạo URL khi browser origin không khả dụng.
+Đây không phải backend API endpoint; API client production đã nhúng Render staging URL và không chứa
+localhost port 8080.
 
-## Before Vercel Staging Deployment
+## Before Future Vercel Staging Redeploy
 
-1. Hoàn thành Phase 8.6 và lấy Render backend staging HTTPS URL thật.
-2. Tạo/configure Vercel project với Root Directory `frontend`.
-3. Đặt `VITE_API_BASE_URL` bằng Render URL thật trong đúng Vercel environment.
-4. Xác nhận backend `CORS_ALLOWED_ORIGINS` chứa Vercel staging origin thật.
-5. Build/deploy lại sau mọi thay đổi build-time env.
-6. Không upload hoặc commit `dist`; để Vercel build từ source.
-7. Chạy browser/CORS/API và route refresh checklist trong Phase 8.7.
+1. Confirm the Render backend staging URL still matches Vercel `VITE_API_BASE_URL`.
+2. Confirm backend `CORS_ALLOWED_ORIGINS` still contains the Vercel staging origin.
+3. Build/deploy again after every build-time env change.
+4. Do not upload or commit `dist`; let Vercel build from source.
+5. Re-run browser/CORS/API and route refresh checks after redeploy.
 
 ## Known Limitations
 
-- Backend Render staging URL chưa có cho đến Phase 8.6.
-- Vercel project chưa được tạo/configure trong Phase 8.5.
-- Vercel environment variables chưa được đặt.
-- Actual Vercel deploy chưa chạy.
-- Deep-route refresh chưa được browser-test trên deployed URL.
-- Frontend-to-backend CORS chưa thể xác minh end-to-end.
+- Full quiz-taking smoke is deferred until staging quiz content exists.
+- Admin create/edit smoke is deferred to Phase 8.8.
 - Node runtime trên Vercel chưa được pin/xác minh.
 - QuizMaster chưa production-ready.

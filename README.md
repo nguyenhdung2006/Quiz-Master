@@ -100,6 +100,8 @@ local verification and first-deploy checks are documented in
 The Phase 8.6A manual Render backend preflight/checklist is documented in
 [`docs/deployment-render-backend.md`](docs/deployment-render-backend.md), with the closure report in
 [`docs/phase-8-6a-backend-staging-deploy-preflight.md`](docs/phase-8-6a-backend-staging-deploy-preflight.md).
+Phase 8.6A2 confirms the preferred Render backend path is Docker; see
+[`docs/phase-8-6a2-render-docker-backend-preflight.md`](docs/phase-8-6a2-render-docker-backend-preflight.md).
 
 Neon staging database contract, SSL/JDBC format, empty-data policy and DDL limitations are documented in
 [`docs/deployment-database.md`](docs/deployment-database.md). The repository contains placeholders only;

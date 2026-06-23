@@ -1,5 +1,119 @@
 # QuizMaster Render Backend Staging Deploy Guide
 
+## Phase 8.6A2 Docker Path Supersedes Native Java Path
+
+Phase 8.6A2 chooses Render **Docker** deployment for the backend. The earlier 8.6A native Java build/start command is kept only as historical preflight context and is no longer the preferred Render path, because Render's documented native runtimes do not include Java as a safe official runtime path for this project.
+
+Use these Render settings in Phase 8.6B:
+
+```text
+Service type: Web Service
+Runtime / Environment: Docker
+Region: Singapore / nearest Singapore
+Root Directory: backend
+Dockerfile Path: Dockerfile
+Docker Build Context Directory: .
+Health Check Path: /api/categories
+```
+
+Do not set native Java build/start commands for the Render service when using Docker. The container starts the app with:
+
+```text
+java ${JAVA_OPTS:-} -Dserver.port=${PORT:-8080} -jar /app/app.jar
+```
+
+Render supplies `PORT`, and `application-prod.yaml` also supports `server.port=${PORT:8080}`.
+
+Required Render env vars for Docker staging:
+
+```env
+SPRING_PROFILES_ACTIVE=prod
+JWT_SECRET=<strong-secret-at-least-32-chars>
+CORS_ALLOWED_ORIGINS=<frontend-origin-or-comma-separated-list>
+SPRING_DATASOURCE_URL=<neon-jdbc-url-with-sslmode-require>
+SPRING_DATASOURCE_USERNAME=<neon-username>
+SPRING_DATASOURCE_PASSWORD=<neon-password>
+SPRING_JPA_HIBERNATE_DDL_AUTO=update
+APP_SEED_DEMO=false
+```
+
+`SPRING_JPA_HIBERNATE_DDL_AUTO=update` is staging-only. Production default remains `validate`, and production v1.0 still needs versioned migrations or controlled SQL. `APP_SEED_DEMO=false` prevents accidental demo seed; do not assume `demo-user@quizmaster.local` exists in empty staging data.
+
+After Render deploy, use placeholder-only smoke commands:
+
+```bash
+curl -i https://<render-backend-staging-url>/api/categories
+```
+
+Expected empty-data response:
+
+```json
+[]
+```
+
+Register staging user:
+
+```bash
+curl -i -X POST https://<render-backend-staging-url>/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"staging-user-<timestamp>@quizmaster.local","password":"password123"}'
+```
+
+Login staging user:
+
+```bash
+curl -i -X POST https://<render-backend-staging-url>/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"staging-user-<timestamp>@quizmaster.local","password":"password123"}'
+```
+
+Optional auth smoke:
+
+```bash
+curl -i https://<render-backend-staging-url>/api/auth/me \
+  -H "Authorization: Bearer <token>"
+```
+
+CORS allowed origin preflight:
+
+```bash
+curl -i -X OPTIONS https://<render-backend-staging-url>/api/categories \
+  -H "Origin: https://<vercel-frontend-staging-url>" \
+  -H "Access-Control-Request-Method: GET"
+```
+
+CORS unknown origin preflight:
+
+```bash
+curl -i -X OPTIONS https://<render-backend-staging-url>/api/categories \
+  -H "Origin: https://evil.example" \
+  -H "Access-Control-Request-Method: GET"
+```
+
+Curl preflight is useful in 8.6B/8.7, but final browser CORS verification remains deferred to Phase 8.7 after Vercel deploy.
+
+Manual Phase 8.6B Docker checklist:
+
+1. Confirm git clean.
+2. Push `main` only after approval.
+3. Create Render Web Service.
+4. Select Docker runtime/environment.
+5. Set Root Directory `backend`.
+6. Set Dockerfile Path `Dockerfile`.
+7. Set Docker Build Context Directory `.`.
+8. Set Health Check Path `/api/categories`.
+9. Set required env vars in Render Dashboard.
+10. Deploy.
+11. Inspect logs without exposing secrets.
+12. Smoke public endpoint.
+13. Register staging test user.
+14. Login staging test user.
+15. Check no seeder ran.
+16. Check logs do not expose secrets.
+17. Report backend URL and results.
+
+Known risks remain: Java 25 image support must be verified by Docker/Render build, Render free tier may cold start, browser CORS verification is deferred, and `ddl-auto=update` has no production rollback strategy.
+
 ## Purpose
 
 Tài liệu này là checklist preflight và hướng dẫn thao tác thủ công cho backend staging trên Render Web Service. Phase 8.6A chỉ chuẩn bị và xác minh cấu hình; không deploy, không push, không tạo service Render, không đọc hoặc ghi secret.

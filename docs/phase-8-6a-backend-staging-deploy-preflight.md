@@ -6,6 +6,10 @@
 
 Full Phase 8.6 is **NOT closed** because Render deploy has not happened. Phase 8.6B still must push with approval, create/configure the Render service, deploy, inspect logs, and run public smoke tests.
 
+Update after Phase 8.6A2: the native Java Render path documented in 8.6A is superseded by Render Docker
+deployment readiness. 8.6B should use Docker with root directory `backend`, Dockerfile `Dockerfile`,
+Docker build context `.`, and health check `/api/categories`.
+
 ## Scope
 
 Phase 8.6A prepared backend staging deploy documentation and verified the backend deploy contract locally. It did not deploy, push, create Render resources, read secret files, connect to Neon, set real env vars, import data, enable demo seed, modify frontend, or change backend business logic.

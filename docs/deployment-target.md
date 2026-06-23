@@ -8,6 +8,10 @@
 deploy preflight/checklist. Full Phase 8.6 is still open because Render service creation, real env var
 setup, deploy, logs, backend URL, and smoke tests are deferred to Phase 8.6B.
 
+**Phase 8.6A2 DONE / CLOSED - DOCKER READY FOR MANUAL RENDER DEPLOY.** Backend staging deploy path is
+Render Web Service with Docker, root directory `backend`, Dockerfile `Dockerfile`, build context `.`,
+and health check `/api/categories`. Deploy remains pending for Phase 8.6B.
+
 Deployment target đã được chọn cho môi trường staging:
 
 - Frontend: Vercel

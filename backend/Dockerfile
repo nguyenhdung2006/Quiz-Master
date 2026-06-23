@@ -5,16 +5,21 @@ WORKDIR /app
 COPY mvnw pom.xml ./
 COPY .mvn .mvn
 RUN chmod +x mvnw
+RUN ./mvnw -B -DskipTests dependency:go-offline
 
 COPY src src
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw -B clean package -DskipTests
 
-FROM eclipse-temurin:25-jre
+FROM eclipse-temurin:25-jre AS runtime
 
 WORKDIR /app
 
-COPY --from=build /app/target/quizmaster-0.0.1-SNAPSHOT.jar app.jar
+RUN useradd -r -u 10001 appuser
+
+COPY --from=build /app/target/quizmaster-0.0.1-SNAPSHOT.jar /app/app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+USER appuser
+
+CMD ["sh", "-c", "java ${JAVA_OPTS:-} -Dserver.port=${PORT:-8080} -jar /app/app.jar"]

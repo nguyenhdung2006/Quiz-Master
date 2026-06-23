@@ -9,6 +9,26 @@ Phase 8.6A is closed as backend staging deploy preflight only. The manual Render
 No Render service has been created and no backend URL exists yet. Full Phase 8.6 remains open until
 Phase 8.6B performs the approved push, manual Render deploy, log review, and public smoke tests.
 
+## Phase 8.6A2 Render Docker Readiness
+
+Phase 8.6A2 supersedes the native Java Render path with Docker deployment readiness. Use
+[`docs/deployment-render-backend.md`](deployment-render-backend.md) as the Render Docker guide and
+[`docs/phase-8-6a2-render-docker-backend-preflight.md`](phase-8-6a2-render-docker-backend-preflight.md)
+as the closure report.
+
+The selected Render backend path is now:
+
+```text
+Runtime / Environment: Docker
+Root Directory: backend
+Dockerfile Path: Dockerfile
+Docker Build Context Directory: .
+Health Check Path: /api/categories
+```
+
+Do not use native Java build/start commands for the first Render staging deploy unless a later approved
+task intentionally changes the deployment strategy.
+
 ## Target
 
 Target: Render Web Service in Singapore, connected to Neon PostgreSQL in AWS Singapore. The first target is staging, not production.

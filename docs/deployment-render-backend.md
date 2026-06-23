@@ -1,5 +1,35 @@
 # QuizMaster Render Backend Staging Deploy Guide
 
+## Phase 8.6B Staging Deployment Completed
+
+Backend staging has been deployed manually on Render using the Docker path.
+
+```text
+Status: deployed for staging
+Render service: quizmaster-api-staging
+Backend URL: https://quizmaster-api-staging.onrender.com
+Runtime / Environment: Docker
+Region: Singapore / Southeast Asia
+Plan: Free
+Branch: main
+Root Directory: backend
+Dockerfile Path: Dockerfile
+Docker Build Context Directory: .
+Health Check Path: /api/categories
+Latest deployed commit: a5a2563 Prepare Render Docker backend deployment
+```
+
+Smoke results recorded in [`docs/phase-8-6b-render-backend-staging-deploy.md`](phase-8-6b-render-backend-staging-deploy.md):
+
+- `GET /api/categories`: PASS, `200 OK`, body `[]`.
+- Register staging user: PASS, token redacted.
+- Login staging user: PASS, token redacted.
+- CORS allowed origin `http://localhost:5173`: PASS.
+- CORS unknown origin `https://evil.example`: PASS, blocked.
+- Render logs: PASS, Java 25/prod profile/Tomcat port 10000/Hikari/PostgreSQL connected, no secret values observed.
+
+Keep all Render env var values outside Git. Frontend/Vercel browser CORS verification remains deferred to Phase 8.7.
+
 ## Phase 8.6A2 Docker Path Supersedes Native Java Path
 
 Phase 8.6A2 chooses Render **Docker** deployment for the backend. The earlier 8.6A native Java build/start command is kept only as historical preflight context and is no longer the preferred Render path, because Render's documented native runtimes do not include Java as a safe official runtime path for this project.
@@ -118,7 +148,7 @@ Known risks remain: Java 25 image support must be verified by Docker/Render buil
 
 Tài liệu này là checklist preflight và hướng dẫn thao tác thủ công cho backend staging trên Render Web Service. Phase 8.6A chỉ chuẩn bị và xác minh cấu hình; không deploy, không push, không tạo service Render, không đọc hoặc ghi secret.
 
-Full Phase 8.6 chua dong cho den khi Phase 8.6B deploy thu cong tren Render va smoke test public URL that su.
+Full Phase 8.6 was closed for backend deploy after Phase 8.6B completed manual Render deploy and backend smoke tests. Frontend staging remains pending for Phase 8.7.
 
 ## Scope
 

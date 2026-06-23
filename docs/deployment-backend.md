@@ -1,13 +1,36 @@
 # QuizMaster Backend Deployment
 
+## Phase 8.6B Render Docker Staging Deploy
+
+Backend staging is now deployed on Render using Docker:
+
+```text
+Render service: quizmaster-api-staging
+Backend URL: https://quizmaster-api-staging.onrender.com
+Runtime / Environment: Docker
+Region: Singapore / Southeast Asia
+Plan: Free
+Root Directory: backend
+Dockerfile Path: Dockerfile
+Health Check Path: /api/categories
+Latest deployed commit: a5a2563 Prepare Render Docker backend deployment
+```
+
+The Phase 8.6B closure report is
+[`docs/phase-8-6b-render-backend-staging-deploy.md`](phase-8-6b-render-backend-staging-deploy.md).
+
+Backend deploy smoke passed for public categories, register, login, and CORS preflight checks. This does
+not make QuizMaster production-ready, and frontend staging deployment/browser verification remains
+pending.
+
 ## Phase 8.6A Render Preflight
 
 Phase 8.6A is closed as backend staging deploy preflight only. The manual Render backend guide is
 [`docs/deployment-render-backend.md`](deployment-render-backend.md), and the phase report is
 [`docs/phase-8-6a-backend-staging-deploy-preflight.md`](phase-8-6a-backend-staging-deploy-preflight.md).
 
-No Render service has been created and no backend URL exists yet. Full Phase 8.6 remains open until
-Phase 8.6B performs the approved push, manual Render deploy, log review, and public smoke tests.
+At the time of Phase 8.6A, no Render service had been created and no backend URL existed yet. Phase 8.6B
+later completed the approved push, manual Render deploy, log review, and public smoke tests.
 
 ## Phase 8.6A2 Render Docker Readiness
 
@@ -26,14 +49,14 @@ Docker Build Context Directory: .
 Health Check Path: /api/categories
 ```
 
-Do not use native Java build/start commands for the first Render staging deploy unless a later approved
-task intentionally changes the deployment strategy.
+Do not use native Java build/start commands for this Render staging service unless a later approved task
+intentionally changes the deployment strategy.
 
 ## Target
 
 Target: Render Web Service in Singapore, connected to Neon PostgreSQL in AWS Singapore. The first target is staging, not production.
 
-No Render service or database is created by this document. Neon staging was provisioned manually in Phase 8.4; production database has not been created.
+Render backend staging service was created in Phase 8.6B. Neon staging was provisioned manually in Phase 8.4; production database has not been created.
 
 ## Render Service Type
 
@@ -41,7 +64,7 @@ No Render service or database is created by this document. Neon staging was prov
 Service type: Web Service
 Region: Singapore
 Branch: main
-First deploy: manual/explicit after user-approved push
+First deploy: completed manually in Phase 8.6B
 ```
 
 Render must build the repository Dockerfile. Do not select a native Java runtime because Render does not provide one for this project plan.
@@ -150,10 +173,10 @@ Prepared in Phase 8.4:
 - JDBC `sslmode=require` contract;
 - successful local prod-profile connection and `GET /api/categories` returning `[]` against empty staging data.
 
-Still required before/after first deploy:
+Still required after first deploy:
 
 - test pooled versus direct connection for Hibernate/Hikari;
-- verify Render-to-Neon TLS/network behavior;
+- continue monitoring Render-to-Neon TLS/network behavior;
 - keep credentials only in Render environment variables;
 - review the schema created by temporary `ddl-auto=update` and establish migrations.
 
@@ -227,22 +250,21 @@ Expected result: non-zero exit because datasource variables are absent, with no 
 
 ## Known Limitations
 
-- Docker build and Java 25 image tags are not verified locally because Docker Desktop's Linux engine is unavailable.
-- Container non-root user is deferred until an image can be built and tested.
-- Neon staging has been provisioned and local direct JDBC/TLS smoke passed, but Render-to-Neon and pooled connections are unverified.
+- Docker build and Java 25 image tags were verified by Render deploy logs; local Docker Desktop Linux engine remained unavailable during preflight.
+- Container runs as a non-root user in the committed Dockerfile.
+- Neon staging has been provisioned; Render-to-Neon connection passed deployed backend smoke, while pooled connection behavior remains unverified.
 - No Flyway/Liquibase migrations or rollback plan exist.
 - No actuator health endpoint exists.
-- Render/Vercel deployments and staging smoke tests have not run.
-- Local commits have not been pushed.
+- Render backend deployment and backend smoke tests passed in Phase 8.6B; Vercel/frontend deployment has not run.
+- Local commits through `a5a2563` were pushed before Render service creation.
 - QuizMaster is not production-ready.
 
-## Before First Render Deploy
+## After First Render Deploy
 
-1. Reuse only the prepared Neon staging project and place its values in Render environment storage without exposing them.
-2. Confirm whether the first Render run still needs temporary staging `update`, then plan migration-controlled `validate`.
-3. Set every required Render variable using real staging URLs/secrets.
-4. Confirm `backend/Dockerfile` builds on an available Docker daemon or controlled Render build.
-5. Keep auto-deploy disabled for the first attempt.
-6. After startup, use `GET /api/categories` as the initial public smoke endpoint because no actuator health endpoint exists.
-7. Verify logs contain no secret and `show-sql` remains false.
-8. Run auth, quiz and attempt smoke tests only after the basic database/API check passes.
+1. Keep real Neon values only in Render environment storage.
+2. Treat `SPRING_JPA_HIBERNATE_DDL_AUTO=update` as staging-only and plan migration-controlled `validate`.
+3. Keep backend URL documented as `https://quizmaster-api-staging.onrender.com`.
+4. Do not expose Render logs that contain sensitive runtime context.
+5. Use `GET /api/categories` as the lightweight public smoke endpoint because no actuator health endpoint exists.
+6. Continue with frontend/Vercel integration and browser CORS verification in Phase 8.7.
+7. Run broader auth, quiz and attempt smoke tests after frontend integration.

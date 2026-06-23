@@ -10,7 +10,12 @@ setup, deploy, logs, backend URL, and smoke tests are deferred to Phase 8.6B.
 
 **Phase 8.6A2 DONE / CLOSED - DOCKER READY FOR MANUAL RENDER DEPLOY.** Backend staging deploy path is
 Render Web Service with Docker, root directory `backend`, Dockerfile `Dockerfile`, build context `.`,
-and health check `/api/categories`. Deploy remains pending for Phase 8.6B.
+and health check `/api/categories`. Phase 8.6B later completed this deploy.
+
+**Phase 8.6B DONE / CLOSED - PASS WITH NOTES.** Backend staging Render Docker deploy is complete at
+`https://quizmaster-api-staging.onrender.com`. Public categories, register, login, and CORS curl
+preflight checks passed. Frontend Vercel deploy and browser CORS/flow verification remain pending for
+Phase 8.7.
 
 Deployment target đã được chọn cho môi trường staging:
 

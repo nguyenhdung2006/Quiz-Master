@@ -102,6 +102,8 @@ The Phase 8.6A manual Render backend preflight/checklist is documented in
 [`docs/phase-8-6a-backend-staging-deploy-preflight.md`](docs/phase-8-6a-backend-staging-deploy-preflight.md).
 Phase 8.6A2 confirms the preferred Render backend path is Docker; see
 [`docs/phase-8-6a2-render-docker-backend-preflight.md`](docs/phase-8-6a2-render-docker-backend-preflight.md).
+Phase 8.6B deployed the backend staging service at `https://quizmaster-api-staging.onrender.com`; see
+[`docs/phase-8-6b-render-backend-staging-deploy.md`](docs/phase-8-6b-render-backend-staging-deploy.md).
 
 Neon staging database contract, SSL/JDBC format, empty-data policy and DDL limitations are documented in
 [`docs/deployment-database.md`](docs/deployment-database.md). The repository contains placeholders only;

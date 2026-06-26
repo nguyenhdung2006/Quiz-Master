@@ -6,6 +6,7 @@ QuizMaster is a standalone quiz platform backend. It supports authentication, pu
 
 - Phase 8 deployment validation: DONE / CLOSED — PASS WITH NOTES
 - Phase 9 staging release formalization: PASS WITH NOTES
+- Phase C v1.0 UI polish: READY WITH NOTES; see [`docs/phase-c-ui-polish-closure.md`](docs/phase-c-ui-polish-closure.md)
 - Current focus: v1.0 readiness
 - Phase B1 demo data/account strategy: PASS; see [`docs/demo-data-strategy.md`](docs/demo-data-strategy.md)
 - Next: Phase B2 Staging Demo Data Creation, then UX/UI Polish, Documentation/Portfolio Packaging, Production-Lite Hardening, Release Candidate QA

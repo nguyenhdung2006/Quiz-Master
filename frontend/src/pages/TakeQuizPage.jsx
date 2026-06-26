@@ -64,6 +64,7 @@ export default function TakeQuizPage() {
   const [submitError, setSubmitError] = useState("");
   const [submitReviewOpen, setSubmitReviewOpen] = useState(false);
   const submitLockRef = useRef(false);
+  const submitReviewRef = useRef(null);
   const answeredCount = Object.keys(selectedAnswers).length;
   const totalQuestions = questions.length;
   const unansweredCount = Math.max(totalQuestions - answeredCount, 0);
@@ -133,6 +134,12 @@ export default function TakeQuizPage() {
       setSubmitReviewOpen(false);
     }
   }, [answeredCount, totalQuestions]);
+
+  useEffect(() => {
+    if (submitReviewOpen) {
+      submitReviewRef.current?.scrollIntoView({ block: "center" });
+    }
+  }, [submitReviewOpen]);
 
   if (loadingAttempt) {
     return <LoadingState message="Restoring your quiz attempt..." />;
@@ -266,7 +273,7 @@ export default function TakeQuizPage() {
 
       {submitReviewOpen && (
         <Card className="border-amber-200 bg-amber-50 shadow-amber-100/70" padding="lg">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div ref={submitReviewRef} className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <Badge variant="warning">Review before submit</Badge>
               <p className="mt-3 text-sm font-semibold leading-6 text-amber-950">{getSubmitWarningMessage()}</p>

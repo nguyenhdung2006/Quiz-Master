@@ -62,11 +62,17 @@ export default function TakeQuizPage() {
   const [selectedAnswers, setSelectedAnswers] = useState(() => readStoredAnswers(attemptId));
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [submitReviewOpen, setSubmitReviewOpen] = useState(false);
   const submitLockRef = useRef(false);
+  const answeredCount = Object.keys(selectedAnswers).length;
+  const totalQuestions = questions.length;
+  const unansweredCount = Math.max(totalQuestions - answeredCount, 0);
 
   useEffect(() => {
     setSelectedAnswers(readStoredAnswers(attemptId));
     setCurrentIndex(0);
+    setSubmitError("");
+    setSubmitReviewOpen(false);
   }, [attemptId]);
 
   useEffect(() => {
@@ -122,6 +128,12 @@ export default function TakeQuizPage() {
     };
   }, [attemptId, initialAttempt, navigate]);
 
+  useEffect(() => {
+    if (totalQuestions > 0 && answeredCount === totalQuestions) {
+      setSubmitReviewOpen(false);
+    }
+  }, [answeredCount, totalQuestions]);
+
   if (loadingAttempt) {
     return <LoadingState message="Restoring your quiz attempt..." />;
   }
@@ -138,10 +150,10 @@ export default function TakeQuizPage() {
   }
 
   const currentQuestion = questions[currentIndex];
-  const answeredCount = Object.keys(selectedAnswers).length;
-  const totalQuestions = questions.length;
 
   function handleSelectOption(questionId, optionId) {
+    setSubmitError("");
+    setSubmitReviewOpen(false);
     setSelectedAnswers((answers) => {
       const nextAnswers = {
         ...answers,
@@ -160,23 +172,28 @@ export default function TakeQuizPage() {
     setCurrentIndex((index) => Math.min(index + 1, totalQuestions - 1));
   }
 
-  async function handleSubmit() {
+  function getSubmitWarningMessage() {
+    if (answeredCount === 0) {
+      return "You have not selected any answers. A blank attempt can be submitted, but every question will be counted as incorrect.";
+    }
+
+    if (unansweredCount > 0) {
+      return `${unansweredCount} question${unansweredCount === 1 ? "" : "s"} unanswered. Unanswered questions will be counted as incorrect.`;
+    }
+
+    return "";
+  }
+
+  async function handleSubmit({ skipWarning = false } = {}) {
     if (submitLockRef.current) {
       return;
     }
 
-    const unansweredCount = totalQuestions - answeredCount;
-    let shouldSubmit = true;
+    const submitWarning = getSubmitWarningMessage();
 
-    if (answeredCount === 0) {
-      shouldSubmit = window.confirm("You have not selected any answers. Submit blank attempt?");
-    } else if (unansweredCount > 0) {
-      shouldSubmit = window.confirm(
-        `You still have ${unansweredCount} unanswered questions. Unanswered questions will be counted as incorrect. Submit anyway?`,
-      );
-    }
-
-    if (!shouldSubmit) {
+    if (submitWarning && !skipWarning) {
+      setSubmitError("");
+      setSubmitReviewOpen(true);
       return;
     }
 
@@ -203,45 +220,85 @@ export default function TakeQuizPage() {
 
   return (
     <div className="space-y-6">
-      <Card padding="lg">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <Badge variant="purple">Take quiz</Badge>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">{attempt.quizTitle}</h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Question {currentIndex + 1} of {totalQuestions}
-              {attempt.timeLimitMinutes ? ` - ${attempt.timeLimitMinutes} minutes` : ""}
-            </p>
+      <Card className="overflow-hidden border-violet-100 shadow-violet-100/70" padding="none">
+        <div className="border-b border-violet-100 bg-gradient-to-br from-violet-50 via-white to-indigo-50 p-5 sm:p-6 lg:p-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div className="max-w-3xl">
+              <Badge variant="purple">Take quiz</Badge>
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">{attempt.quizTitle}</h1>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Badge variant="neutral">
+                  Question {currentIndex + 1} of {totalQuestions}
+                </Badge>
+                <Badge variant={answeredCount === totalQuestions ? "success" : "purple"}>
+                  Answered {answeredCount}/{totalQuestions}
+                </Badge>
+                {attempt.timeLimitMinutes ? (
+                  <Badge variant="neutral">Time limit: {attempt.timeLimitMinutes} minutes</Badge>
+                ) : (
+                  <Badge variant="neutral">No time limit</Badge>
+                )}
+              </div>
+            </div>
+            <Link to="/quizzes" className="text-sm font-semibold text-slate-500 transition hover:text-slate-800">
+              Back to quizzes
+            </Link>
           </div>
-          <Link to="/quizzes" className="text-sm font-semibold text-slate-500 hover:text-slate-800">
-            Back to quizzes
-          </Link>
         </div>
-        <div className="mt-6 max-w-3xl">
-          <ProgressBar value={answeredCount} max={totalQuestions} />
+
+        <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_260px] lg:p-8">
+          <div className="max-w-3xl">
+            <ProgressBar label="Answered" value={answeredCount} max={totalQuestions} />
+          </div>
+          <div className="rounded-2xl border border-violet-100 bg-violet-50/70 px-4 py-3 text-sm leading-6 text-violet-950">
+            {answeredCount > 0
+              ? "Your selections are saved on this device until you submit."
+              : "Selections will be saved on this device as you answer."}
+          </div>
         </div>
       </Card>
 
       {submitError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm leading-6 text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium leading-6 text-red-700" role="alert">
           {submitError}
         </div>
+      )}
+
+      {submitReviewOpen && (
+        <Card className="border-amber-200 bg-amber-50 shadow-amber-100/70" padding="lg">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <Badge variant="warning">Review before submit</Badge>
+              <p className="mt-3 text-sm font-semibold leading-6 text-amber-950">{getSubmitWarningMessage()}</p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button type="button" variant="secondary" onClick={() => setSubmitReviewOpen(false)} disabled={submitting}>
+                Continue answering
+              </Button>
+              <Button type="button" onClick={() => handleSubmit({ skipWarning: true })} disabled={submitting}>
+                {submitting ? "Submitting..." : "Submit anyway"}
+              </Button>
+            </div>
+          </div>
+        </Card>
       )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="space-y-4">
           <QuestionCard
+            disabled={submitting}
             question={currentQuestion}
             questionNumber={currentIndex + 1}
             selectedOptionId={selectedAnswers[currentQuestion.id]}
+            totalQuestions={totalQuestions}
             onSelectOption={handleSelectOption}
           />
 
-          <Card className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" padding="md">
+          <Card className="flex flex-col gap-3 border-violet-100 shadow-violet-100/70 sm:flex-row sm:items-center sm:justify-between" padding="md">
             <Button
               type="button"
               onClick={goPrevious}
-              disabled={currentIndex === 0}
+              disabled={currentIndex === 0 || submitting}
               variant="secondary"
             >
               Previous
@@ -252,14 +309,16 @@ export default function TakeQuizPage() {
                 <Button
                   type="button"
                   onClick={goNext}
+                  disabled={submitting}
                 >
                   Next
                 </Button>
               ) : null}
               <Button
                 type="button"
-                onClick={handleSubmit}
+                onClick={() => handleSubmit()}
                 disabled={submitting}
+                aria-busy={submitting}
               >
                 {submitting ? "Submitting..." : "Submit"}
               </Button>

@@ -7,6 +7,7 @@ import EmptyState from "../components/common/EmptyState.jsx";
 import ErrorState from "../components/common/ErrorState.jsx";
 import LoadingState from "../components/common/LoadingState.jsx";
 import Button from "../components/ui/Button.jsx";
+import Card from "../components/ui/Card.jsx";
 import PageHeader from "../components/ui/PageHeader.jsx";
 
 export default function MyAttemptsPage() {
@@ -82,7 +83,17 @@ export default function MyAttemptsPage() {
         <EmptyAttemptsState />
       )}
 
-      {!loading && !error && attempts.length > 0 && <AttemptHistoryList attempts={attempts} />}
+      {!loading && !error && attempts.length > 0 && (
+        <Card className="border-violet-100 shadow-violet-100/70" padding="lg">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-slate-950">Attempt history</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {attempts.length} attempt{attempts.length === 1 ? "" : "s"} found for your account.
+            </p>
+          </div>
+          <AttemptHistoryList attempts={attempts} />
+        </Card>
+      )}
     </div>
   );
 }
@@ -91,8 +102,8 @@ function EmptyAttemptsState() {
   return (
     <div className="space-y-4">
       <EmptyState
-        title="Bạn chưa có lịch sử làm bài."
-        message="Bắt đầu một quiz để xem kết quả và phần review tại đây."
+        title="No submitted attempts yet."
+        message="Start and submit a quiz to see your result and answer review here."
       />
       <Button as={Link} to="/quizzes">
         Browse quizzes

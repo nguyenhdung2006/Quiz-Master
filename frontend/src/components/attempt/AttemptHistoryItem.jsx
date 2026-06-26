@@ -9,12 +9,12 @@ export default function AttemptHistoryItem({ attempt }) {
   const submittedLabel = submitted ? formatDateTime(attempt.submittedAt) : "Not submitted yet";
 
   return (
-    <Card as="article" className="transition hover:-translate-y-0.5 hover:shadow-md" padding="lg">
+    <Card as="article" className="border-slate-200/80 transition hover:-translate-y-0.5 hover:shadow-md" padding="lg">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={submitted ? "success" : "warning"}>{submitted ? "Submitted" : "In progress"}</Badge>
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <span className="text-xs font-semibold text-slate-400">
               Attempt #{attempt.attemptId}
             </span>
           </div>
@@ -28,18 +28,18 @@ export default function AttemptHistoryItem({ attempt }) {
           </dl>
         </div>
 
-        <div className="flex shrink-0 flex-wrap gap-3 lg:justify-end">
+        <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:justify-end">
           {submitted ? (
             <>
-              <Button as={Link} to={`/attempts/${attempt.attemptId}/result`}>
+              <Button as={Link} to={`/attempts/${attempt.attemptId}/result`} className="w-full sm:w-auto">
                 View result
               </Button>
-              <Button as={Link} to={`/attempts/${attempt.attemptId}/review`} variant="secondary">
+              <Button as={Link} to={`/attempts/${attempt.attemptId}/review`} className="w-full sm:w-auto" variant="secondary">
                 Review answers
               </Button>
             </>
           ) : (
-            <span className="rounded-lg bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-500">
+            <span className="rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-500">
               Result unavailable
             </span>
           )}
@@ -52,14 +52,14 @@ export default function AttemptHistoryItem({ attempt }) {
 function Metric({ label, tone = "neutral", value }) {
   const toneClass = {
     neutral: "text-slate-950",
-    purple: "text-purple-700",
+    purple: "text-violet-700",
     success: "text-emerald-700",
   }[tone];
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className={`mt-1 text-sm font-bold ${toneClass}`}>{value}</dd>
+      <dt className="text-xs font-semibold text-slate-500">{label}</dt>
+      <dd className={`mt-1 break-words text-sm font-bold ${toneClass}`}>{value}</dd>
     </div>
   );
 }

@@ -52,25 +52,32 @@ export default function AnswerReviewPage() {
   const skippedCount = questions.filter((question) => question.selectedOptionId == null).length;
   const wrongCount =
     result.wrongCount ?? Math.max(0, (result.totalQuestions || 0) - (result.correctCount || 0) - skippedCount);
+  const submittedLabel = formatDateTime(result.submittedAt);
 
   return (
     <div className="space-y-6">
-      <Card padding="lg">
-        <Badge variant="purple">Answer review</Badge>
-        <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-950">{result.quizTitle}</h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Score {result.scorePercentage}% - {result.correctCount}/{result.totalQuestions} correct
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Button as={Link} to={`/attempts/${result.attemptId}/result`}>
-              Result
-            </Button>
-            <Button as={Link} to="/quizzes" variant="secondary">
-              Back to quizzes
-            </Button>
+      <Card className="overflow-hidden border-violet-100 shadow-violet-100/70" padding="none">
+        <div className="border-b border-violet-100 bg-gradient-to-br from-violet-50 via-white to-indigo-50 p-5 sm:p-6 lg:p-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <Badge variant="purple">Answer review</Badge>
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">{result.quizTitle}</h1>
+              <p className="mt-2 text-sm text-slate-500">
+                Score {result.scorePercentage}% with {result.correctCount}/{result.totalQuestions} correct
+              </p>
+              <p className="mt-2 text-sm text-slate-500">Submitted {submittedLabel}</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button as={Link} to={`/attempts/${result.attemptId}/result`}>
+                Result
+              </Button>
+              <Button as={Link} to="/attempts" variant="secondary">
+                My attempts
+              </Button>
+              <Button as={Link} to="/quizzes" variant="secondary">
+                Back to quizzes
+              </Button>
+            </div>
           </div>
         </div>
       </Card>
@@ -83,7 +90,7 @@ export default function AnswerReviewPage() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-          <Card padding="lg">
+          <Card className="border-violet-100 shadow-violet-100/70" padding="lg">
             <h2 className="text-sm font-semibold text-slate-900">Review summary</h2>
             <div className="mt-4 grid gap-3 text-sm">
               <SummaryRow label="Score" value={`${result.scorePercentage}%`} />
@@ -93,9 +100,9 @@ export default function AnswerReviewPage() {
             </div>
           </Card>
 
-          <Card padding="lg">
+          <Card className="border-violet-100 shadow-violet-100/70" padding="lg">
             <h2 className="text-sm font-semibold text-slate-900">Questions</h2>
-            <div className="mt-4 grid grid-cols-5 gap-2">
+            <div className="mt-4 grid grid-cols-5 gap-2 sm:grid-cols-8 lg:grid-cols-5">
               {questions.map((question, index) => {
                 const skipped = question.selectedOptionId == null;
                 const statusClass = skipped
@@ -107,7 +114,8 @@ export default function AnswerReviewPage() {
                 return (
                   <span
                     key={question.questionId}
-                    className={`flex h-10 items-center justify-center rounded-full text-sm font-bold ${statusClass}`}
+                    className={`flex h-10 items-center justify-center rounded-2xl text-sm font-bold ${statusClass}`}
+                    title={`Question ${index + 1}: ${skipped ? "skipped" : question.correct ? "correct" : "wrong"}`}
                   >
                     {index + 1}
                   </span>
@@ -135,6 +143,23 @@ function SummaryRow({ label, tone = "neutral", value }) {
       <span className={`font-bold ${toneClass}`}>{value}</span>
     </div>
   );
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "not available";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "not available";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 }
 
 function toReviewError(error) {

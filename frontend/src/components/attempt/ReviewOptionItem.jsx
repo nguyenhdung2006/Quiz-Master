@@ -1,8 +1,8 @@
 export default function ReviewOptionItem({ label, option }) {
   const stateClass = option.correct
-    ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+    ? "border-emerald-300 bg-emerald-50 text-emerald-950"
     : option.selected
-      ? "border-red-300 bg-red-50 text-red-900"
+      ? "border-red-300 bg-red-50 text-red-950"
       : "border-slate-200 bg-white text-slate-700";
   const markerClass = option.correct
     ? "bg-emerald-100 text-emerald-800"
@@ -18,15 +18,19 @@ export default function ReviewOptionItem({ label, option }) {
         : "";
 
   return (
-    <li className={`rounded-2xl border px-4 py-3 text-sm ${stateClass}`}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <li className={`rounded-2xl border px-4 py-3 text-sm shadow-sm ${stateClass}`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${markerClass}`}>
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-sm font-bold ${markerClass}`}>
             {label}
           </span>
-          <span className="min-w-0 font-medium leading-6">{option.content}</span>
+          <span className="min-w-0 break-words font-medium leading-6">{option.content}</span>
         </div>
-        {statusLabel && <span className="shrink-0 text-xs font-bold">{statusLabel}</span>}
+        {statusLabel && (
+          <span className="w-fit shrink-0 rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold ring-1 ring-current/10">
+            {statusLabel}
+          </span>
+        )}
       </div>
     </li>
   );

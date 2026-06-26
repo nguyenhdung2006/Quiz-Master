@@ -12,10 +12,10 @@ export default function ReviewQuestionCard({ question, questionNumber }) {
       : "danger";
 
   return (
-    <Card as="article" padding="lg">
+    <Card as="article" className="border-violet-100 shadow-violet-100/70" padding="lg">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-purple-700">
+          <p className="text-sm font-semibold text-violet-700">
             Question {questionNumber}
           </p>
           <h2 className="mt-3 text-xl font-bold leading-8 text-slate-950">{question.content}</h2>
@@ -25,7 +25,7 @@ export default function ReviewQuestionCard({ question, questionNumber }) {
 
       {skipped && (
         <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-          No answer selected.
+          You did not select an answer for this question.
         </p>
       )}
 
@@ -35,9 +35,9 @@ export default function ReviewQuestionCard({ question, questionNumber }) {
         ))}
       </ul>
 
-      <div className="mt-5 rounded-2xl border border-purple-100 bg-purple-50 px-4 py-4">
-        <p className="text-sm font-semibold text-purple-900">Explanation</p>
-        <p className="mt-1 text-sm leading-6 text-purple-900">
+      <div className="mt-5 rounded-2xl border border-violet-100 bg-violet-50 px-4 py-4">
+        <p className="text-sm font-semibold text-violet-950">Explanation</p>
+        <p className="mt-1 text-sm leading-6 text-violet-950/80">
           {question.explanation || "No explanation provided."}
         </p>
       </div>

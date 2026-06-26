@@ -5,8 +5,8 @@ export default function ScoreCard({ scorePercentage }) {
   const dashOffset = circumference - (clampedScore / 100) * circumference;
 
   return (
-    <div className="rounded-2xl border border-purple-100 bg-purple-50 p-6">
-      <div className="relative mx-auto flex h-44 w-44 items-center justify-center rounded-full bg-white shadow-sm">
+    <div className="rounded-3xl border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-indigo-50 p-6 shadow-sm shadow-violet-100/70">
+      <div className="relative mx-auto flex h-44 w-44 items-center justify-center rounded-full bg-white shadow-sm shadow-violet-100/70 ring-1 ring-violet-100">
         <svg className="h-36 w-36 -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
           <circle cx="50" cy="50" r="44" fill="none" stroke="rgb(226 232 240)" strokeWidth="9" />
           <circle
@@ -23,11 +23,11 @@ export default function ScoreCard({ scorePercentage }) {
         </svg>
         <div className="absolute text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Score</p>
-          <p className="mt-1 text-4xl font-bold text-purple-800">{clampedScore}%</p>
+          <p className="mt-1 text-4xl font-black text-violet-800">{clampedScore}%</p>
         </div>
       </div>
-      <p className="mt-5 text-center text-sm leading-6 text-purple-900">
-        This score comes from the backend submission result.
+      <p className="mt-5 text-center text-sm leading-6 text-violet-950/75">
+        Calculated from your submitted answers.
       </p>
     </div>
   );

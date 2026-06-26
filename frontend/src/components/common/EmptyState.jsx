@@ -2,8 +2,8 @@ import Card from "../ui/Card.jsx";
 
 export default function EmptyState({ title, message }) {
   return (
-    <Card className="border-dashed px-5 py-10 text-center" padding="none">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-50 text-xl font-bold text-purple-700">
+    <Card className="border-dashed border-violet-200/80 bg-white/90 px-5 py-10 text-center" padding="none">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-xl font-bold text-violet-700 ring-1 ring-violet-100">
         ?
       </div>
       <h2 className="mt-4 text-lg font-semibold text-slate-900">{title}</h2>

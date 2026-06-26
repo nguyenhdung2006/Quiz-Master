@@ -3,14 +3,14 @@ import { classNames } from "../ui/classNames.js";
 export default function CategoryFilter({ categories, selectedCategoryId, disabled, onChange }) {
   const buttonClass = (active) =>
     classNames(
-      "rounded-full px-3.5 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60",
+      "whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-100 disabled:cursor-not-allowed disabled:opacity-60",
       active
-        ? "bg-purple-700 text-white shadow-sm"
-        : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-purple-50 hover:text-purple-800 hover:ring-purple-200",
+        ? "bg-gradient-to-b from-violet-600 to-indigo-700 text-white shadow-sm shadow-violet-200"
+        : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-violet-50 hover:text-violet-800 hover:ring-violet-200",
     );
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="-mx-1 flex gap-2 overflow-x-auto px-1 py-1 sm:mx-0 sm:flex-wrap sm:px-0">
       <button
         type="button"
         disabled={disabled}

@@ -51,10 +51,11 @@ export default function QuizCatalogPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader eyebrow="Quiz catalog" title="Find a quiz to practice">
+    <div className="space-y-6 lg:space-y-8">
+      <PageHeader eyebrow="Quiz catalog" title="Find a quiz to practice" className="border-violet-100 shadow-violet-100/70">
         <p>
-          Browse published quizzes by category. Public listings show only quiz metadata.
+          Browse published quizzes by category. Public listings show only quiz metadata,
+          never questions, answer keys, or explanations.
         </p>
       </PageHeader>
 
@@ -64,21 +65,27 @@ export default function QuizCatalogPage() {
         <ErrorState message={error} onAction={loadCatalog} />
       ) : (
         <>
-          <Card padding="md">
-            <CategoryFilter
-              categories={categories}
-              selectedCategoryId={selectedCategoryId}
-              disabled={filterLoading}
-              onChange={handleCategoryChange}
-            />
+          <Card className="bg-white/95" padding="md">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-base font-bold text-slate-950">Categories</h2>
+                <p className="mt-1 text-sm text-slate-500">Filter the real published catalog.</p>
+              </div>
+              <CategoryFilter
+                categories={categories}
+                selectedCategoryId={selectedCategoryId}
+                disabled={filterLoading}
+                onChange={handleCategoryChange}
+              />
+            </div>
           </Card>
 
           {filterLoading ? (
             <LoadingState message="Loading selected category..." />
           ) : quizzes.length === 0 ? (
             <EmptyState
-              title="Chưa có quiz công khai."
-              message="Thử chọn chủ đề khác hoặc quay lại sau khi admin xuất bản thêm quiz."
+              title="No public quizzes available."
+              message="Try another category or check back after an admin publishes more quizzes."
             />
           ) : (
             <section className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

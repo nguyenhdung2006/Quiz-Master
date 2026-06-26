@@ -218,11 +218,11 @@ export default function AdminQuizEditorPage() {
 
       {editing && (
         <section className="space-y-5">
-          <Card>
+          <Card className="bg-gradient-to-r from-violet-50 to-white">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h2 className="text-2xl font-semibold text-slate-950">Question editor</h2>
-                <p className="mt-2 text-sm text-slate-500">
+                <p className="mt-2 text-sm leading-6 text-slate-600">
                   Add single-choice questions with exactly one correct option.
                 </p>
               </div>
@@ -267,9 +267,10 @@ export default function AdminQuizEditorPage() {
           </div>
 
           {structuralLockMessage && (
-            <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-100">
-              {structuralLockMessage}
-            </p>
+            <Card className="border-amber-200 bg-amber-50 shadow-amber-100/60" padding="md">
+              <h3 className="text-sm font-semibold text-amber-950">Structural edits are locked</h3>
+              <p className="mt-1 text-sm leading-6 text-amber-800">{structuralLockMessage}</p>
+            </Card>
           )}
         </section>
       )}

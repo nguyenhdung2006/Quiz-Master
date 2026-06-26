@@ -16,9 +16,8 @@ export default function CategoryList({
         <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-slate-950">Category list</h2>
-            <p className="text-sm text-slate-500">{categories.length} categories available.</p>
+            <p className="text-sm text-slate-500">Edit category names and slugs used by quizzes.</p>
           </div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Name / slug / actions</p>
         </div>
       </div>
 
@@ -27,16 +26,19 @@ export default function CategoryList({
           <div
             key={category.id}
             data-testid={`category-row-${category.id}`}
-            className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-[1fr_1fr_auto] md:items-center"
+            className="grid grid-cols-1 gap-4 px-4 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-center"
           >
-            <div>
-              <p className="font-medium text-slate-950">{category.name}</p>
+            <div className="min-w-0">
+              <p className="break-words font-semibold text-slate-950">{category.name}</p>
               <p className="text-xs text-slate-500">ID {category.id}</p>
             </div>
-            <code className="w-fit rounded-lg bg-slate-100 px-2.5 py-1.5 text-sm text-slate-700">
-              {category.slug}
-            </code>
-            <div className="flex justify-start gap-2 md:justify-end">
+            <div className="min-w-0">
+              <p className="mb-1 text-xs font-semibold text-slate-500">Slug</p>
+              <code className="block w-fit max-w-full break-words rounded-lg bg-slate-100 px-2.5 py-1.5 text-sm text-slate-700">
+                {category.slug}
+              </code>
+            </div>
+            <div className="flex flex-col justify-start gap-2 sm:flex-row md:justify-end">
               {confirmingId === category.id ? (
                 <>
                   <Button
@@ -46,6 +48,7 @@ export default function CategoryList({
                     data-testid={`confirm-delete-category-${category.id}`}
                     variant="danger"
                     size="sm"
+                    className="w-full sm:w-auto"
                   >
                     {deletingId === category.id ? "Deleting..." : "Confirm delete"}
                   </Button>
@@ -55,6 +58,7 @@ export default function CategoryList({
                     disabled={deletingId === category.id}
                     variant="secondary"
                     size="sm"
+                    className="w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
@@ -67,6 +71,7 @@ export default function CategoryList({
                     data-testid={`edit-category-${category.id}`}
                     variant="secondary"
                     size="sm"
+                    className="w-full sm:w-auto"
                   >
                     Edit
                   </Button>
@@ -76,7 +81,7 @@ export default function CategoryList({
                     data-testid={`delete-category-${category.id}`}
                     variant="ghost"
                     size="sm"
-                    className="text-red-700 hover:bg-red-50"
+                    className="w-full text-red-700 hover:bg-red-50 sm:w-auto"
                   >
                     Delete
                   </Button>

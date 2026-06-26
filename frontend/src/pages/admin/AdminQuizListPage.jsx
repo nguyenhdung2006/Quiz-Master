@@ -6,6 +6,7 @@ import EmptyState from "../../components/common/EmptyState.jsx";
 import ErrorState from "../../components/common/ErrorState.jsx";
 import LoadingState from "../../components/common/LoadingState.jsx";
 import Button from "../../components/ui/Button.jsx";
+import Card from "../../components/ui/Card.jsx";
 import PageHeader from "../../components/ui/PageHeader.jsx";
 
 export default function AdminQuizListPage() {
@@ -60,7 +61,24 @@ export default function AdminQuizListPage() {
         <EmptyState title="No quizzes yet." message="Create a draft quiz to get started." />
       )}
 
-      {!loading && !error && quizzes.length > 0 && <AdminQuizList quizzes={quizzes} />}
+      {!loading && !error && quizzes.length > 0 && (
+        <div className="space-y-4">
+          <Card className="bg-gradient-to-r from-violet-50 to-white" padding="md">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-950">Content library</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  {quizzes.length} quiz{quizzes.length === 1 ? "" : "zes"} available to manage.
+                </p>
+              </div>
+              <p className="text-sm font-semibold text-violet-700">
+                Publishing is controlled from each quiz editor.
+              </p>
+            </div>
+          </Card>
+          <AdminQuizList quizzes={quizzes} />
+        </div>
+      )}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import CategoryList from "../../components/admin/CategoryList.jsx";
 import EmptyState from "../../components/common/EmptyState.jsx";
 import ErrorState from "../../components/common/ErrorState.jsx";
 import LoadingState from "../../components/common/LoadingState.jsx";
+import Card from "../../components/ui/Card.jsx";
 import PageHeader from "../../components/ui/PageHeader.jsx";
 
 export default function AdminCategoryPage() {
@@ -84,7 +85,7 @@ export default function AdminCategoryPage() {
         Manage the subjects used to organize quizzes. Categories with quizzes remain protected from deletion.
       </PageHeader>
 
-      <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <CategoryForm
           editingCategory={editingCategory}
           busy={saving}
@@ -97,6 +98,20 @@ export default function AdminCategoryPage() {
         />
 
         <div className="min-w-0 space-y-4">
+          {!loading && !loadError && categories.length > 0 && (
+            <Card className="bg-gradient-to-r from-violet-50 to-white" padding="md">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-950">Category directory</h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {categories.length} categor{categories.length === 1 ? "y" : "ies"} available for quiz metadata.
+                  </p>
+                </div>
+                <p className="text-sm font-semibold text-violet-700">Names and slugs are managed here.</p>
+              </div>
+            </Card>
+          )}
+
           {loading && <LoadingState message="Loading categories..." />}
 
           {!loading && loadError && (
